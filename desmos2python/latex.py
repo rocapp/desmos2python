@@ -3,19 +3,17 @@ logger = logging.getLogger(__name__)
 from ._logger import LoggingContext
 import json
 import re
-from jinja2 import Environment
+import traceback
+from typing import AnyStr, List
 from pathlib import Path
+from functools import cached_property
 import numpy as np
 import sympy as sp
 from sympy.utilities.lambdify import implemented_function
-from sympy.simplify.cse_main import cse as sympy_cse
 from sympy.parsing.latex import parse_latex
 from sympy import pycode
-from sympy.parsing.sym_expr import SymPyExpression
 from sympy.solvers.solveset import nonlinsolve
-import traceback
-from typing import AnyStr, List
-from .utils import flatten
+from jinja2 import Environment, PackageLoader
 from .consts import GlobalConsts
 import builtins
 builtins.__dict__.update(vars(GlobalConsts))
@@ -36,6 +34,9 @@ class DesmosLatexParser(object):
         - fpath : pathlike : path to a JSON file containing a list of latex equations
         - auto_init : flag to automatically attempt to initialize/load default equations
         """
+        #: init properties
+        self._template_vars = None
+        #: kwds -> instance config
         self.auto_exec = auto_exec
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
@@ -46,7 +47,28 @@ class DesmosLatexParser(object):
         if auto_exec is True:
             self.exec_pycode()  # ! modifies namespace if `auto_exec` is True
 
+    @cached_property
+    def env(self):
+        return self.init_jinja_env()
+
+    def init_jinja_env(self):
+        #: initialize environment -> instance
+        env = Environment(autoescape=False, optimized=True,
+                          loader=PackageLoader('desmos2python'))
+        #: get the dictionary of values to use for the environment...
+        template_vars = self.calc_pycode_environment()
+        self.template_vars = template_vars
+        return env
+
+    @property
+    def template_vars(self):
+        return self._template_vars
+    @template_vars.setter
+    def template_vars(self, newtemp):
+        self._template_vars = newtemp
+
     def setup(self, expr_str=None, lines=None, fpath=None, **kwds):
+        self.env  # ! init cached property
         if expr_str is not None:
             self.lines = expr_str.split('\n')
             return
@@ -58,11 +80,11 @@ class DesmosLatexParser(object):
         self.setup(fpath=self.fpath)
         return
 
-    @property
+    @cached_property
     def sympy_lines(self):
         return self.parse2sympy()
 
-    @property
+    @cached_property
     def pycode_lines(self):
         return self.parse2pycode()
 
@@ -163,63 +185,19 @@ class DesmosLatexParser(object):
             'ns_name': self.ns_name,
         }
 
-    @property
+    @cached_property
+    def template(self):
+        template = self.env.get_template('desmos_model_ns.pyjinja2')
+        return template
+    
+    @cached_property
     def pycode_string(self):
         """Finalized pycode string.
 
         Formatted, ready to `exec(...)` !
         """
-        env = Environment(autoescape=False, optimized=False)
-        #: get the dictionary of values to use for the environment...
-        template_env = self.calc_pycode_environment()
-        #: define the template string
-        template_string = \
-            """
-
-class {{ ns_name }}(object):
-
-    def __init__(self, **kwds):
-        #: ! update parameters on construction
-        self.__dict__.update(kwds)
-
-        #: Define vectorized functions (instance-level)
-{% for equation in equations %}
-        self.{{ equation.func_vectorized }}
-{% endfor %}
-
-    #: Constants
-{% for key, value in constants.items() %}
-    {{ key }} = {{ value }}
-{% endfor %}
-
-    #: Parameters:
-    params = tuple(({% for param_line in parameters %}
-            '{{ param_line.param_name }}',
-            {% endfor %}))
-{% for param_line in parameters %}
-    {{ param_line.pycode_fixed }}
-{% endfor %}
-
-    #: (Functions) State Equations:
-    output_keys = tuple((
-            {% for equation in equations %}
-            {% set func_args_len = equation.func_args|length %}
-            {% if func_args_len < 2 %}
-            '{{ equation.func_name }}',
-            {% endif %}
-            {% endfor %}))
-{% for equation in equations %}
-    {{ equation.pycode_fixed }}
-{% endfor %}
-
-
-def get_desmos_ns():
-    return {{ ns_name }}
-
-            """
-        #: render and return...
-        template = env.from_string(template_string)
-        return template.render(**template_env)
+        #: render template and return...
+        return self.template.render(**self.template_vars)
 
     @property
     def pycode_fixed(self):
@@ -269,14 +247,11 @@ def fix_raw_pycode(line: AnyStr, retfull=True):
     Example:
     -------
     ```python
-        >>> In [152]: line
+        >>> line = 'E(x) = 1 + math.exp(-2*x)'
 
-        >>> Out[152]: 'E(x) = 1 + math.exp(-2*x)'
+        >>> line_fixed = fix_raw_pycode(line)
 
-        >>> In [153]: print(fix_raw_pycode(line))
-
-        >>> Out[153]:
-
+        >>> print(line_fixed)
             def E(x):
                 return 1 + np.exp(-2*x)
     ```
@@ -374,4 +349,5 @@ def run_demo(**kwds):
     
 
 if __name__ == '__main__':
-    dlp = run_demo(ns_prefix='Demo')
+    import doctest
+    doctest.testmod()

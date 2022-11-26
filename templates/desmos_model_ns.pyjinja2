@@ -1,0 +1,43 @@
+"""{{ ns_name|lower }} namespace definition."""
+
+class {{ ns_name }}(object):
+
+    def __init__(self, **kwds):
+        #: ! update parameters on construction
+        self.__dict__.update(kwds)
+
+        #: Define vectorized functions (instance-level)
+{% for equation in equations %}
+        self.{{ equation.func_vectorized }}
+{% endfor %}
+
+    #: Constants
+{% for key, value in constants.items() %}
+    {{ key }} = {{ value }}
+{% endfor %}
+
+    #: Parameters:
+    params = tuple({% for param_line in parameters %}
+            '{{ param_line.param_name }}',
+            {% endfor %})
+{% for param_line in parameters %}
+    {{ param_line.pycode_fixed }}
+{% endfor %}
+
+    #: (Functions) State Equations:
+    output_keys = tuple(
+            {% for equation in equations %}
+            {% set func_args_len = equation.func_args|length %}
+            {% if func_args_len < 2 %}
+            '{{ equation.func_name }}',
+            {% endif %}
+          {% endfor %}
+	  )
+{% for equation in equations %}
+    {{ equation.pycode_fixed }}
+{% endfor %}
+
+
+def get_desmos_ns():
+    return {{ ns_name }}
+

@@ -1,6 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools >= 35.0.2",
+    "setuptools_scm >= 2.0.0, <3"
+]
 build-backend = "setuptools.build_meta"
+
 [project]
 name = "desmos2python"
 version = "0.0.1"
@@ -19,5 +23,11 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/rocapp/desmos2python"
 "Bug Tracker" = "https://github.com/rocapp/desmos2python/issues"
-[dependencies]
-python = "^3.8"
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+
+[tool.setuptools.packages.find]
+where = ["desmos2python", ]
+include = ["desmos2python*", ]
+exclude = ["tests", ]

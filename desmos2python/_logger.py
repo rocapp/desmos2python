@@ -1,6 +1,4 @@
-import logging
-import sys
-
+"""Logging context manager."""
 
 class LoggingContext:
 
