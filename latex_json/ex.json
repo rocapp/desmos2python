@@ -1,0 +1,5 @@
+[
+    "E\\left(x\\right)=\\frac{1}{1+\\exp\\left(-2x\\right)}",
+    "\\alpha_{m}=1",
+    "F\\left(x\\right)=E\\left(\\alpha_{m}\\cdot\\left(1+\\alpha_{m}\\right)\\cdot x \\right)"
+]

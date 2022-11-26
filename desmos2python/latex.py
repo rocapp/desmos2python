@@ -1,13 +1,11 @@
 import logging
-try:
-    logging.getLogger(__name__)
-except:
-    pass
+logger = logging.getLogger(__name__)
+from ._logger import LoggingContext
 import json
 import re
 from jinja2 import Environment
-from pylatexenc.latex2text import LatexNodes2Text
 from pathlib import Path
+import numpy as np
 import sympy as sp
 from sympy.utilities.lambdify import implemented_function
 from sympy.simplify.cse_main import cse as sympy_cse
@@ -21,7 +19,6 @@ from .utils import flatten
 from .consts import GlobalConsts
 import builtins
 builtins.__dict__.update(vars(GlobalConsts))
-import numpy as np
 
 
 class DesmosLatexParser(object):
@@ -32,6 +29,13 @@ class DesmosLatexParser(object):
     def __init__(self, expr_str : AnyStr = None, lines: List[AnyStr] = None,
                  fpath : AnyStr = None, auto_init : bool = True, auto_exec: bool = True,
                  ns_prefix : AnyStr = '', ns_name : AnyStr = 'DesmosModelNS', **kwds):
+        """
+        Keyword Arguments:
+        - expr_str : string : latex equations as a newline-separated string
+        - lines : list : list of latex equations (string)
+        - fpath : pathlike : path to a JSON file containing a list of latex equations
+        - auto_init : flag to automatically attempt to initialize/load default equations
+        """
         self.auto_exec = auto_exec
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
@@ -49,9 +53,10 @@ class DesmosLatexParser(object):
         if fpath is not None:
             self.lines = DesmosLatexParser.read_file(self.fpath)
             return
-        #: get filepath if needed, then return
+        #: get filepath if needed
         self.fpath = DesmosLatexParser.get_fpath(**kwds)
         self.setup(fpath=self.fpath)
+        return
 
     @property
     def sympy_lines(self):
@@ -69,7 +74,7 @@ class DesmosLatexParser(object):
     @property
     def expr(self):
         expr = sp.Expr(*self.sympy_lines)
-        subs_dict = {'E': self.sympy_lines[0].rhs, 'pi': np.pi}
+        subs_dict = {'E': self.sympy_lines[0].rhs, 'pi': GlobalConsts.M_PI}
         for a in expr.args:
             if hasattr(a, 'rhs'):
                 if isinstance(a.rhs, float):
@@ -126,7 +131,7 @@ class DesmosLatexParser(object):
     @property
     def constants(self):
         return {
-            'pi': np.pi
+            'pi': GlobalConsts.M_PI
         }
 
     def calc_pycode_environment(self):
@@ -229,7 +234,7 @@ def get_desmos_ns():
         """CAUTION: This function uses `exec(...)`.
         """
         global_dict = dict(globals())
-        global_dict.update(vars(consts.GlobalConsts))
+        global_dict.update(vars(GlobalConsts))
         exec(self.pycode_string, global_dict)
         self.get_desmos_ns = lambda *args: global_dict.get('get_desmos_ns')()
         return self.get_desmos_ns()
@@ -321,33 +326,18 @@ def _\1(self, \2):
         'param_value': param_value,
     }
 
-    
-def tokenize_latex_equation(line : AnyStr, lhs_pattern=None, rhs_pattern=None, retall=False):
-    """use the builtin python `re` module to get a nested dictionary of groupdicts with keys `func`, `args`, ..."""
-    lhs_str, rhs_str = line.split('=')
-    if lhs_pattern is None:
-        lhs_pattern = re.compile(r'(?P<func>[\w*])\\left\((?P<args>[\w,*])\\right\)')
-    if rhs_pattern is None:
-        rhs_pattern = re.compile(r'\\left\((.*?)\\right\)')
-    lhs_matches = re.search(pattern=lhs_pattern, string=lhs_str)
-    rhs_matches = re.search(pattern=rhs_pattern, string=rhs_str)
-    matches_dict = {'lhs': lhs_matches, 'rhs': rhs_matches}
-    if retall is False:
-        return matches_dict
-    return matches_dict, (lhs_matches, rhs_matches)
-
 
 def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     """parse the given list of latex strings to sympy"""
-    logging.getLogger().setLevel(verbosity)
     out_list = []
-    for line in latex_list:
-        try:
-            out = parse_latex(line).subs('pi', np.pi)
-        except:
-            logging.warning(traceback.format_exc())
-        else:
-            out_list.append(out)
+    with LoggingContext(logger, level=verbosity):
+        for line in latex_list:
+            try:
+                out = parse_latex(line).subs('pi', np.pi)
+            except:
+                logging.warning(traceback.format_exc())
+            else:
+                out_list.append(out)
     return out_list
 
 
@@ -362,33 +352,19 @@ def read_latex_lines(fpth, split=True):
     return latex_lines
 
 
-def get_filepath(subdir='desmos_raw', pattern='*', fext='json', n=1, **kwds):
+def get_filepath(pattern='*', fext='json', n=1, **kwds):
     """get a matching filepath from the resources directory"""
     fpaths = list(
         Path(__file__) \
         .parent \
         .parent \
-        .parent \
-        .joinpath('resources') \
-        .joinpath(subdir) \
-        .glob(f'*{pattern}.{fext}'.replace('**','*'))
+        .rglob(f'*{pattern}.{fext}'.replace('**','*'))
     )
     if n == 1:
         #: ! ensure at least one path found.
         assert len(fpaths) >= 1
         return fpaths[0]
     return fpaths
-
-
-def run_latexnodes2text_demo():
-    fpth = get_demo_fpth()
-    latex_lines = read_latex_lines(fpth)
-    latex_str = '\n'.join(latex_lines)
-    lnt = LatexNodes2Text()
-    text_str = lnt.latex_to_text(latex_str)
-    text_str = text_str.encode(errors='ignore')
-    text_str = text_str.decode()
-    return text_str
 
 
 def run_demo(**kwds):
