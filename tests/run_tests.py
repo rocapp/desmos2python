@@ -29,10 +29,18 @@ class TestDesmos2Python(unittest.TestCase):
         x = np.linspace(0, 24, num=100)
         y = dmn.F(x)
         plt.plot(x, y)
-        imfn = Path(__file__).parent.joinpath('ex.png')
+        imfn, expfn = \
+            Path(__file__).parent.joinpath('ex.png'), \
+            Path(__file__).parent.joinpath('expected_ex.png')
         plt.savefig(str(imfn))
         plt.close()
         logging.info('...saved test output to tests/ex.png')
+        logging.debug('comparing saved image to expected...')
+        with open(imfn, 'rb') as fp:
+            imbytes = fp.read()
+        with open(expfn, 'rb') as fp:
+            expbytes = fp.read()
+        self.assertEqual(expbytes, imbytes)
         x1 = [0.1, 0.3, 0.5, 0.9, 1.0, 2.0, 100.0]
         logging.info('x=', x1)
         y1 = dmn.F(x1)
