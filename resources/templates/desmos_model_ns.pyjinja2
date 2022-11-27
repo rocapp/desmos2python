@@ -17,22 +17,16 @@ class {{ ns_name }}(object):
 {% endfor %}
 
     #: Parameters:
-    params = tuple({% for param_line in parameters %}
-            '{{ param_line.param_name }}',
-            {% endfor %})
+    params = tuple(({% for param_line in parameters %} '{{ param_line.param_name }}', {% endfor %}))
 {% for param_line in parameters %}
     {{ param_line.pycode_fixed }}
 {% endfor %}
 
     #: (Functions) State Equations:
-    output_keys = tuple(
-            {% for equation in equations %}
-            {% set func_args_len = equation.func_args|length %}
-            {% if func_args_len < 2 %}
-            '{{ equation.func_name }}',
-            {% endif %}
-          {% endfor %}
-	  )
+    output_keys = tuple(({% for equation in equations %}
+              {% set func_args_len = equation.func_args|length %}
+              {% if func_args_len < 2 %}'{{ equation.func_name }}', {% endif %}
+            {% endfor %}))
 {% for equation in equations %}
     {{ equation.pycode_fixed }}
 {% endfor %}

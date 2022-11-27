@@ -37,15 +37,16 @@ resource_pth = None
 def get_resources_path():
     global resource_pth
     try:
+        import importlib.util
         resource_pth = \
             Path(importlib.util \
-                     .find_spec('resources') \
-                     .loader \
-                     .load_module() \
-                     .__path__[0])
+                 .find_spec('resources') \
+                 .loader \
+                 .load_module() \
+                 .__path__[0])
     except:
-        with LoggingContext(logger, level=logging.WARN) as logctx:
-            logctx.logger.warning(
+        with LoggingContext(logger, level=logging.WARN):
+            logger.warning(
                 traceback.format_exc() +
                 '\n...failed to find resource path.')
     else:
@@ -53,7 +54,7 @@ def get_resources_path():
 
 
 #: ! get the resources path
-get_resources_path()
+resource_pth = get_resources_path()
 
 
 class DesmosLatexParser(object):
@@ -133,9 +134,7 @@ class DesmosLatexParser(object):
     def sympy_lines(self):
         """
         >>> DesmosLatexParser(auto_init=True, auto_exec=False).sympy_lines
-        [Eq(E(x), 1/(1 + exp(-2*x))),
-        Eq(alpha_{m}, 1),
-        Eq(F(x), E(alpha_{m}*x*(alpha_{m} + 1)))]
+        [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(alpha_{m}*x*(alpha_{m} + 1)))]
 
         """
         return self.parse2sympy(self.lines)
@@ -185,9 +184,10 @@ class DesmosLatexParser(object):
     def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy:bool = False):
         """fix a line after `sympy.pycode(line)`.
 
-        >>> line = '  # Not supported in Python:\n  # E\n(E(x) == 1/(1 + math.exp(-2*x)))'
+        >>> line = '  # Not supported in Python:\\n  # E\\n(E(x) == 1/(1 + math.exp(-2*x)))'
         >>> DesmosLatexParser.fix_pycode_line(line)
         '(E(x) == 1/(1 + math.exp(-2*x)))'
+
         """
         if isinstance(pline, list):
             plines = [DesmosLatexParser.fix_pycode_line(pl) for pl in pline]
@@ -279,9 +279,6 @@ class DesmosLatexParser(object):
         """Finalized pycode string.
 
         Formatted, ready to `exec(...)` !
-
-        >>> DesmosLatexParser().pycode_string.replace('\"\"\"', "\'\'\'")
-        '''desmosmodelns namespace definition.'''\n\nclass DesmosModelNS(object):\n\n    def __init__(self, **kwds):\n        #: ! update parameters on construction\n        self.__dict__.update(kwds)\n\n        #: Define vectorized functions (instance-level)\n\n        self.E = np.vectorize(self._E, cache=True, excluded="self")\n\n        self.F = np.vectorize(self._F, cache=True, excluded="self")\n\n\n    #: Constants\n\n    pi = 3.141592653589793\n\n\n    #: Parameters:\n    params = tuple(\n            \'alpha_m\',\n            )\n\n    alpha_m = 1\n\n\n    #: (Functions) State Equations:\n    output_keys = tuple(\n            \n            \n            \n            \'E\',\n            \n          \n            \n            \n            \'F\',\n            \n          \n\t  )\n\n    def _E(self, x):\n        globals().update(vars(self))\n        alpha_m = self.alpha_m\n        return 1/(1 + np.exp(-2*x))\n\n    def _F(self, x):\n        globals().update(vars(self))\n        alpha_m = self.alpha_m\n        return E(alpha_m*x*(alpha_m + 1))\n\n\n\ndef get_desmos_ns():\n    return DesmosModelNS\n
         """
         
         #: render template and return...
@@ -324,14 +321,7 @@ class DesmosLatexParser(object):
 
     @staticmethod
     def read_file(fpath):
-        """read a json-formatted list -> latex eqns
-
-        >>> DesmosLatexParser.read_file(get_filepath())
-        ['E\\left(x\\right)=\\frac{1}{1+\\exp\\left(-2x\\right)}',
- '\\alpha_{m}=1',
- 'F\\left(x\\right)=E\\left(\\alpha_{m}\\cdot\\left(1+\\alpha_{m}\\right)\\cdot x \\right)']
-
-        """
+        """read a json-formatted list -> latex eqns."""
         lines = read_latex_lines(fpath, split=True)
         return lines
 
@@ -438,10 +428,9 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
 def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     """Parse the given list of latex strings to sympy.
 
+    >>> resource_pth = get_resources_path()
     >>> parse_latex_lines2sympy(read_latex_lines(get_filepath()))
-    [Eq(E(x), 1/(1 + exp(-2*x))),
- Eq(alpha_{m}, 1),
- Eq(F(x), E(x*(alpha_{m}*(alpha_{m} + 1))))]
+    [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(x*(alpha_{m}*(alpha_{m} + 1))))]
 
     """
     out_list = []
@@ -458,11 +447,6 @@ def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
 
 def read_latex_lines(fpth, split=True):
     """open and read JSON file containing a list of latex strings.
-
-    Example:
-    --------
-    >>> read_latex_lines(get_filepath())
-    ['E\\left(x\\right)=\\frac{1}{1+\\exp\\left(-2x\\right)}', '\\alpha_{m}=1', 'F\\left(x\\right)=E\\left(\\alpha_{m}\\cdot\\left(1+\\alpha_{m}\\right)\\cdot x \\right)']
     """
     with open(fpth, 'r') as fp:
         lines = json.load(fp)
