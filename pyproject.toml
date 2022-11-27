@@ -28,6 +28,6 @@ classifiers = [
 readme = {file = ["README.md"]}
 
 [tool.setuptools.packages.find]
-where = ["src/desmos2python", "resources"]
-include = ["src/desmos2python*", "resources*"]
+where = ["desmos2python", "resources"]
+include = ["desmos2python*", "resources*"]
 exclude = ["tests", ]
