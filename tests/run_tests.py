@@ -1,6 +1,7 @@
 import os
 import logging
 import sys
+from pathlib import Path
 import unittest
 rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
 if rpath not in sys.path:
@@ -28,7 +29,8 @@ class TestDesmos2Python(unittest.TestCase):
         x = np.linspace(0, 24, num=100)
         y = dmn.F(x)
         plt.plot(x, y)
-        plt.savefig(os.path.join(rpath, 'tests/ex.png'))
+        imfn = Path(__file__).parent.joinpath('ex.png')
+        plt.savefig(str(imfn))
         plt.close()
         logging.info('...saved test output to tests/ex.png')
         x1 = [0.1, 0.3, 0.5, 0.9, 1.0, 2.0, 100.0]
