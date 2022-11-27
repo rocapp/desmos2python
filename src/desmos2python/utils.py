@@ -1,5 +1,6 @@
 """utils.py
 """
+from pathlib import Path
 
 __all__ = [
     'flatten', 'flatten_list', 'flatten_nested_list',

@@ -2,7 +2,7 @@ import os
 import logging
 import sys
 import unittest
-rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
 if rpath not in sys.path:
     sys.path.insert(0, rpath)
 
