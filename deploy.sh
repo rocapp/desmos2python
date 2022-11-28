@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 -m twine upload --repository testpypi dist/*
+python3 -m twine upload dist/*$(git tag | tail -1)*
