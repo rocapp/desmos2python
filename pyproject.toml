@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "desmos2python"
-dynamic = ["readme", "version"]
+dynamic = ["readme", "version", "dependencies"]
 authors = [
   { name="Robert Ahlroth Capps", email="rcapps@teladochealth.com" },
 ]
@@ -28,6 +28,7 @@ classifiers = [
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"]}
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 where = [".", "desmos2python", "resources"]
