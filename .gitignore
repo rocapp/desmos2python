@@ -130,3 +130,6 @@ dmypy.json
 
 # emacs
 *.*~
+
+# ! setuptools_scm-generated version
+_version.py

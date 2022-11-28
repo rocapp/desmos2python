@@ -25,10 +25,10 @@ classifiers = [
 
 [tool.setuptools_scm]
 # ! enables dynamic version using Git
-write_to = "pkg/_version.py"
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"]}
+version = {file = ["desmos2python/_version.py"]}
 
 [tool.setuptools.packages.find]
 where = [".", "desmos2python", "resources"]
