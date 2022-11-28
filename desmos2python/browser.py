@@ -110,6 +110,7 @@ class DesmosWebSession(object):
 
     @cached_property
     def expressions_list(self):
+        """return complete dictionary JSON output of Calc.getExpressions()."""
         return self.get_expressions_from_url()
 
     @property
@@ -126,17 +127,18 @@ class DesmosWebSession(object):
             '.json'
         return output_filename
 
-    def export_latex2json(self, latex_list=None, output_filename=None):
+    def export_latex2json(self, latex_list=None, output_filename=None, json_dir=None):
         """export latex_list -> output_filename (JSON list)"""
         if latex_list is None:
             latex_list = self.latex_list
         if output_filename is None:
             output_filename = self.output_filename
-        with importlib.resources.path("resources", "latex_json") as json_dir:
-            outpath = json_dir.joinpath(output_filename)
-            self.outpath = outpath
-            with outpath.open(mode='w') as fp:
-                json.dump(latex_list, fp)
+        if json_dir is None:
+            json_dir = next(importlib.resources.path("resources", "latex_json").gen)
+        outpath = json_dir.joinpath(output_filename)
+        self.outpath = outpath
+        with outpath.open(mode='w') as fp:
+            json.dump(latex_list, fp)
         return outpath
 
     @staticmethod

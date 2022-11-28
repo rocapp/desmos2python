@@ -31,6 +31,6 @@ readme = {file = ["README.md"]}
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
-where = [".", "desmos2python", "resources"]
-include = ["desmos2python*", "resources*"]
+where = [".", "desmos2python",]
+include = ["desmos2python*", "desmos2python.resources*"]
 exclude = ["tests", ]
