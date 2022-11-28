@@ -1,7 +1,9 @@
+from queue import Queue
 import logging
 import json
 import re
 import traceback
+import ast
 from pathlib import Path
 from functools import cached_property
 import importlib
@@ -30,41 +32,15 @@ logger = logging.getLogger(__name__)
 #: get the package path
 rootpath = get_rootpath()
 
-#: path to resources directory
-resource_pth = None
-
-
-def get_resources_path():
-    global resource_pth
-    try:
-        import importlib.util
-        resource_pth = \
-            Path(importlib.util \
-                 .find_spec('resources') \
-                 .loader \
-                 .load_module() \
-                 .__path__[0])
-    except:
-        with LoggingContext(logger, level=logging.WARN):
-            logger.warning(
-                traceback.format_exc() +
-                '\n...failed to find resource path.')
-    else:
-        return resource_pth
-
-
-#: ! get the resources path
-resource_pth = get_resources_path()
-
 
 class DesmosLatexParser(object):
 
     """Helper class for parsing Desmos LaTeX equations.
     """
 
-    def __init__(self, expr_str : AnyStr = None, lines: List[AnyStr] = None,
-                 fpath : AnyStr = None, auto_init : bool = True, auto_exec: bool = True,
-                 ns_prefix : AnyStr = '', ns_name : AnyStr = 'DesmosModelNS', **kwds):
+    def __init__(self, expr_str: AnyStr = None, lines: List[AnyStr] = None,
+                 fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = True,
+                 ns_prefix: AnyStr = '', ns_name: AnyStr = 'DesmosModelNS', **kwds):
         """
         Keyword Arguments:
         - expr_str : string : latex equations as a newline-separated string
@@ -78,10 +54,11 @@ class DesmosLatexParser(object):
         self.auto_exec = auto_exec
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
-        self.fpath : AnyStr = fpath
-        self.lines : List = lines
+        self.fpath: AnyStr = fpath
+        self.lines: List = lines
         if auto_init is True:
-            self.setup(expr_str=expr_str, lines=self.lines, fpath=self.fpath, **kwds)
+            self.setup(expr_str=expr_str, lines=self.lines,
+                       fpath=self.fpath, **kwds)
         if auto_exec is True:
             self.exec_pycode()  # ! modifies namespace if `auto_exec` is True
 
@@ -91,11 +68,12 @@ class DesmosLatexParser(object):
 
     def init_jinja_env(self):
         #: initialize environment -> instance
-        global resource_pth
+        with importlib.resources.path('resources', 'templates') as tpath:
+            templates_dir = tpath
         env = Environment(autoescape=False, optimized=True,
                           loader=FileSystemLoader(
                               searchpath=[
-                                  resource_pth.joinpath('templates'),
+                                  templates_dir
                               ],
                           ))
         #: get the dictionary of values to use for the environment...
@@ -106,6 +84,7 @@ class DesmosLatexParser(object):
     @property
     def template_vars(self):
         return self._template_vars
+
     @template_vars.setter
     def template_vars(self, newtemp):
         self._template_vars = newtemp
@@ -137,7 +116,7 @@ class DesmosLatexParser(object):
         [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(alpha_{m}*x*(alpha_{m} + 1)))]
 
         """
-        return self.parse2sympy(self.lines)
+        return self.parse2sympy(self.latex_lines)
 
     @property
     def pycode_lines(self):
@@ -181,7 +160,7 @@ class DesmosLatexParser(object):
         return nonlinsolve(self.sympy_lines, self.syms)
 
     @staticmethod
-    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy:bool = False):
+    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy: bool = False):
         """fix a line after `sympy.pycode(line)`.
 
         >>> line = '  # Not supported in Python:\\n  # E\\n(E(x) == 1/(1 + math.exp(-2*x)))'
@@ -194,8 +173,11 @@ class DesmosLatexParser(object):
             if isinstance(plines[0], list):
                 return flatten(plines)
             return plines
-        if from_sympy is True:
-            pline = pycode(pline)
+        try:
+            if from_sympy is True:
+                pline = pycode(pline)
+        except Exception:
+            logging.warning(traceback.format_exc())
         pline = pline \
             .split('# Not supported in Python:\n  #')[-1] \
             .split('\n')[-1]
@@ -211,12 +193,13 @@ class DesmosLatexParser(object):
         for sline in slines:
             try:
                 pline = pycode(sline)
-            except:
+            except Exception:
                 #: ! on failure, log (line, error_msg) to `self._errs`
                 msg = traceback.format_exc()
                 logging.warning(msg)
                 if isinstance(cls, DesmosLatexParser):
                     cls._errs.append((sline, msg))
+                pcode_lines.append(sline)
             else:
                 pcode_lines.append(pline)
         return pcode_lines
@@ -243,10 +226,14 @@ class DesmosLatexParser(object):
     def calc_pycode_environment(self):
         """setup variables for jinja2 environment"""
         lines_fixed = self.fix_pycode_lines()
-        params_fixed = list(filter(lambda line: line.get('param_name')!='', lines_fixed))
-        params_fixed = sorted(params_fixed, key=lambda line: line.get('pycode_fixed'))
-        equations_fixed = list(filter(lambda line: line.get('func_name')!='', lines_fixed))
-        equations_fixed = sorted(equations_fixed, key=lambda line: line.get('func_name'))
+        params_fixed = list(
+            filter(lambda line: line.get('param_name') != '', lines_fixed))
+        params_fixed = sorted(
+            params_fixed, key=lambda line: line.get('pycode_fixed'))
+        equations_fixed = list(
+            filter(lambda line: line.get('func_name') != '', lines_fixed))
+        equations_fixed = sorted(
+            equations_fixed, key=lambda line: line.get('func_name'))
         constants = self.constants
         #: define constants, parameters locally (for equation-level scope)
         tab4 = '    '
@@ -273,14 +260,13 @@ class DesmosLatexParser(object):
     def template(self):
         template = self.env.get_template('desmos_model_ns.pyjinja2')
         return template
-    
+
     @cached_property
     def pycode_string(self):
         """Finalized pycode string.
 
         Formatted, ready to `exec(...)` !
         """
-        
         #: render template and return...
         return self.template.render(**self.template_vars)
 
@@ -312,8 +298,13 @@ class DesmosLatexParser(object):
     def parse2sympy(cls, lines):
         """Get `self.sympy_lines`"""
         parsed_lines = parse_latex_lines2sympy(lines)
-        sympy_lines = sp.factor_terms(parsed_lines)
-        return sympy_lines
+        try:
+            sympy_lines = sp.factor_terms(parsed_lines)
+        except sp.SympifyError:
+            logging.warning(traceback.format_exc())
+            sympy_lines = parsed_lines
+        finally:
+            return sympy_lines
 
     @staticmethod
     def get_fpath(**kwds):
@@ -326,21 +317,25 @@ class DesmosLatexParser(object):
         return lines
 
 
-class PycodeRegexNS:
-    
+class PycodePatterns:
+
     """Pre-compiled regex patterns for `fix_raw_pycode(...)`.
     """
-    
+
+    #: identify subscripts pattern
     subscript_pattern = re.compile(r'_\{([a-zA-Z0-9]+)\}')
 
-    main_line_pattern = re.compile(r'([a-zA-Z_])\(([a-zA-Z_,\s][a-zA-Z_0-9,\s]*)\)\s=')
-    main_line_repl = \
+    #: ! main template pattern
+    main_line_pattern = re.compile(
+        r'([a-zA-Z_])\(([a-zA-Z_,\s][a-zA-Z_0-9,\s]*)\)\s=')
+    main_line_repl: AnyStr = \
         r'''
 def _\1(self, \2):
     return'''
 
+    #: mismatched parentheses
     fix_mismatch_pattern = re.compile(r'(\(+.*(?![)\)]))', flags=re.DOTALL)
-    fix_mismatch_repl = r'\1'
+    fix_mismatch_repl: AnyStr = r'\1'
 
 
 def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> Dict:
@@ -350,14 +345,14 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     -------
 
     We start with sympy-produced "pycode",
-    
+
     >>> line = '(E(x) == 1 + math.exp(-2*x))'
     >>> print(line)
     (E(x) == 1 + math.exp(-2*x))
 
     ...Then using the `fix_raw_pycode(...)` method,
     we end up with executable python code,
-    
+
     >>> import json
     >>> fix_raw_pycode(line).get('pycode_fixed')
     'def _E(self, x):\\n    return 1 + np.exp(-2*x)'
@@ -365,18 +360,19 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     #: lines -> line (! handle list of strings)
     if not isinstance(line, str):
         lines = list(line)
-        return [fix_raw_pycode(l, retfull=retfull) for l in lines]
+        return [fix_raw_pycode(ll, retfull=retfull) for ll in lines]
     #: keep original line (! in preparation for `retfull`)
     line0 = str(line)
     #: ! Handle double-equals, leading and following parentheses...
     line = str(line).replace(') == ', ') = ')
-    line = line.lstrip('(')[:-1] # remove first and last parentheses
+    line = line.lstrip('(')[:-1]  # remove first and last parentheses
     line = line.replace('cdot ', 'cdot')  # remove extra spaces for cdot
     #: ! Handle '{', '}' -- namely for subscripted variables/functions
-    line = re.sub(pattern=PycodeRegexNS.subscript_pattern, repl=r'_\1', string=line)
+    line = re.sub(pattern=PycodePatterns.subscript_pattern,
+                  repl=r'_\1', string=line)
     #: ! convert to actual python (numpy) syntax -- ready for `DesmosLatexParser.DesmosModelNS`
-    pycode_fixed = re.sub(pattern=PycodeRegexNS.main_line_pattern,
-                          repl=PycodeRegexNS.main_line_repl,
+    pycode_fixed = re.sub(pattern=PycodePatterns.main_line_pattern,
+                          repl=PycodePatterns.main_line_repl,
                           string=line)
     #: ! replace builtin math -> numpy
     pycode_fixed = pycode_fixed.strip().replace('math.', 'np.')
@@ -388,10 +384,18 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
         #: for free parameters (in Desmos, sliders)
         pycode_fixed = pycode_fixed.replace('==', '=')
         param_name = pycode_fixed.split(' ')[0]  # name of parameter
-        param_value = float(pycode_fixed.split('=')[1].strip())  # current value
+        param_value = pycode_fixed.split(
+            '=')[1].strip()  # current value
+        try:
+            param_value = float(param_value)
+        except Exception:
+            param_value = param_value \
+                .replace('[', '') \
+                .replace(']', '') \
+                .split(', ')
     elif 'def ' == pycode_fixed[:4] and retfull is True:
         #: for functions (formulas/equations)
-        func_sig = re.match(PycodeRegexNS.main_line_pattern, line) \
+        func_sig = re.match(PycodePatterns.main_line_pattern, line) \
                      .group() \
                      .split(' ')[0]
         func_name = func_sig \
@@ -405,8 +409,8 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
             f'{func_name} = np.vectorize(self._{func_name}, cache=True, excluded="self")'
     #: ! final fix of any mismatched parentheses
     tmp_result = \
-        re.subn(pattern=PycodeRegexNS.fix_mismatch_pattern,
-                repl=PycodeRegexNS.fix_mismatch_repl,
+        re.subn(pattern=PycodePatterns.fix_mismatch_pattern,
+                repl=PycodePatterns.fix_mismatch_repl,
                 string=pycode_fixed)
     if tmp_result is not None:
         if tmp_result[1] > 0:
@@ -425,23 +429,75 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     }
 
 
+class SympyPatterns:
+    """Regex patterns for latex_lines -> sympy_lines.
+    """
+
+    #: identify desmos-style lists
+    desmos_list_pattern = \
+        re.compile(
+            r'([A-Za-z0-9]\_?\{[a-zA-Z0-9]\})\=\\left\[([0-9])\.\.\.([0-9])\\right\]'
+        )
+
+    @staticmethod
+    def desmos_list_repl(m):
+        cols = list(range(int(m.group(2)), int(m.group(3))+1))
+        return sp.pycode(sp.Eq(sp.Symbol(m.group(1)), sp.Array(cols)))
+
+    @staticmethod
+    def desmos_latex_list_repl(m):
+        cols = list(range(int(m.group(2)), int(m.group(3))+1))
+        cols = ", \\ ".join([str(c) for c in cols])
+        return f'{m.group(1)} = \\left[ {cols}\\right]'
+
+    @staticmethod
+    def desmos_itemize_repl(m):
+        return r'{} = \begin{{\itemize}}'.format(m.group(1)) + \
+            ''.join([f'\item{i}\n' for i in
+                     range(int(m.group(2)), 1+int(m.group(3)))]) +\
+            '\end{{\itemize}}'
+
+    @classmethod
+    def subn(cls, string, key='desmos_list'):
+        p = getattr(cls, f'{key}_pattern')
+        r = getattr(cls, f'{key}_repl')
+        return re.subn(pattern=p, repl=r, string=string)
+
+
 def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     """Parse the given list of latex strings to sympy.
 
-    >>> resource_pth = get_resources_path()
     >>> parse_latex_lines2sympy(read_latex_lines(get_filepath()))
     [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(x*(alpha_{m}*(alpha_{m} + 1))))]
 
     """
+    if isinstance(latex_list, str):
+        latex_list = [latex_list, ]
     out_list = []
+    latex_queue = Queue(maxsize=len(latex_list))
+    for latex_line in latex_list:
+        latex_queue.put(latex_line)
     with LoggingContext(logger, level=verbosity):
-        for line in latex_list:
+        while True:
+            line = latex_queue.get_nowait()
             try:
-                out = parse_latex(line).subs('pi', np.pi)
-            except:
+                out = parse_latex(line) \
+                    .subs('pi', GlobalConsts.M_PI)
+            except Exception:
                 logging.warning(traceback.format_exc())
+                #: ! replace desmos-style lists with latex lists
+                line_repl = SympyPatterns.subn(line, key='desmos_list')
+                if line_repl[1] > 0:
+                    line = line_repl[0]
+                    out_list.append(line)
             else:
                 out_list.append(out)
+            finally:
+                latex_queue.task_done()
+                if latex_queue.empty():
+                    break
+    if len(out_list) == 1:
+        return out_list[0]
     return out_list
 
 
@@ -459,13 +515,12 @@ def read_latex_lines(fpth, split=True):
 
 def get_filepath(pattern='*', fext='json', n=1, **kwds):
     """get a matching filepath from the resources directory"""
-    global resource_pth
-    fpaths = list(
-        Path(resource_pth) \
-        .joinpath('latex_json') \
-        .rglob(f'*{pattern}.{fext}' \
-               .replace('**','*'))
-    )
+    with importlib.resources.path('resources', 'latex_json') as ldir:
+        fpaths = list(
+            ldir
+            .rglob(f'*{pattern}.{fext}'
+                   .replace('**', '*'))
+        )
     if n == 1:
         #: ! ensure at least one path found.
         assert len(fpaths) >= 1
@@ -477,7 +532,7 @@ def run_demo(**kwds):
     dlp = DesmosLatexParser(**kwds)
     logging.info('...initialized parser to global variable:\n\t`dlp`')
     return dlp
-    
+
 
 if __name__ == '__main__':
     import doctest

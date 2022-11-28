@@ -1,9 +1,1 @@
-[
-  "Z\\left(t,x,y\\right)=\\sum_{i=1}^{\\operatorname{length}\\left(t\\right)}\\left(\\left(x-y\\right)\\cdot\\left(t\\left(i\\right)-t\\left(i-1\\right)\\right)\\right)",
-  "p\\left(z\\right)=\\exp\\left(-z\\right)\\cdot\\operatorname{total}\\left(\\exp\\left(-z\\right)\\right)^{-1}",
-  "t_{v}=\\left[1...3\\right]",
-  "m=\\left[1,1.3,2.0\\right]",
-  "d=\\left[1,0.9,1.85\\right]",
-  "q=Z\\left(t_{v},m,d\\right)",
-  "\\left(t_{v},p\\left(q\\right)\\right)"
-]
+["Z\\left(t,x,y\\right)=\\sum_{i=1}^{\\operatorname{length}\\left(t\\right)}\\left(\\left(x-y\\right)\\cdot\\left(t\\left(i\\right)-t\\left(i-1\\right)\\right)\\right)", "p\\left(z\\right)=\\exp\\left(-z\\right)\\cdot\\operatorname{total}\\left(\\exp\\left(-z\\right)\\right)^{-1}", "t_{v}=\\left[1...3\\right]", "m=\\left[1,1.3,2.0\\right]", "d=\\left[1,0.9,1.85\\right]", "q=Z\\left(t_{v},m,d\\right)", "\\left(t_{v},p\\left(q\\right)\\right)"]

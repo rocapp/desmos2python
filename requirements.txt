@@ -2,7 +2,7 @@ setuptools >= 35.0.2
 setuptools_scm >= 2.0.0, <3
 numpy
 matplotlib
+jinja2
 sympy
 antlr4-python3-runtime==4.10
-jinja2
 selenium
