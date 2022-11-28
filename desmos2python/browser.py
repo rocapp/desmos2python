@@ -132,13 +132,11 @@ class DesmosWebSession(object):
             latex_list = self.latex_list
         if output_filename is None:
             output_filename = self.output_filename
-        outpath = importlib \
-            .resources \
-            .files('resources.latex_json') \
-            .joinpath(output_filename)
-        self.outpath = outpath
-        with outpath.open(mode='w') as fp:
-            json.dump(latex_list, fp)
+        with importlib.resources.path("resources", "latex_json") as json_dir:
+            outpath = json_dir.joinpath(output_filename)
+            self.outpath = outpath
+            with outpath.open(mode='w') as fp:
+                json.dump(latex_list, fp)
         return outpath
 
     @staticmethod
