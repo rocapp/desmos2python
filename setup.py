@@ -2,15 +2,17 @@
 
 """The setup script."""
 
-import importlib.metadata
 from setuptools import setup
 
-version = importlib.metadata.version('desmos2python')
+
+def myversion():
+    
+    def clean_scheme(version):
+        return '.'.join([str(v) for v in version.tag.public.split('.')[:1]])
+    return {'local_scheme': clean_scheme}
+
 
 setup(
-    use_scm_version={
-        'write_to': 'desmos2python/_version.py',
-        'write_to_template': f'__version__ = "{version}"',
-    },
+    use_scm_version=myversion,
     setup_requires=['setuptools_scm'],
 )
