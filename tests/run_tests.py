@@ -3,7 +3,8 @@ import logging
 import sys
 from pathlib import Path
 import unittest
-rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
+rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
+    __file__)), '..', 'src'))
 if rpath not in sys.path:
     sys.path.insert(0, rpath)
 
@@ -11,6 +12,15 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+
+class TestDesmosWebSession(unittest.TestCase):
+    def testDWS(self):
+        from desmos2python import DesmosWebSession
+        dws = DesmosWebSession()
+        ll = dws.latex_list
+        self.assertEqual(True, len(ll) > 0)
+        dws.export_latex2json()
 
 
 class TestDesmos2Python(unittest.TestCase):

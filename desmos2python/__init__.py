@@ -1,3 +1,4 @@
+from setuptools_scm import get_version
 from pathlib import Path
 import sys
 
@@ -19,9 +20,13 @@ if rootpath not in sys.path:
 import desmos2python.utils as utils
 import desmos2python.latex as latex
 from desmos2python.latex import DesmosLatexParser
+import desmos2python.browser as browser
+from desmos2python.browser import DesmosWebSession
+
 
 __all__ = [
     'rootpath',
     'get_rootpath',
-    'DesmosLatexParser'
+    'DesmosLatexParser',
+    'DesmosWebSession',
 ]

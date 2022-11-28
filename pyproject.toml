@@ -25,6 +25,7 @@ classifiers = [
 
 [tool.setuptools_scm]
 # ! enables dynamic version using Git
+write_to = "pfun/__init__.py"
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"]}
