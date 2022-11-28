@@ -1,2 +1,4 @@
 #!/bin/bash
-python3 -m twine upload dist/*$(git tag | tail -1)*
+tag=$(python3 -c $'import setuptools_scm as scm; print("{}".format(scm.version_from_scm(".").tag.base_version))')
+git tag "v$tag"
+twine upload dist/*$tag*
