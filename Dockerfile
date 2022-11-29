@@ -3,9 +3,6 @@ FROM python:3.8.15 as base
 
 LABEL Author, Robert Ahlroth Capps
 
-RUN apt-get update && \
-    apt-get install -yqq tox git
-
 ENV PATH=${PATH}:/root/.local:/root/.local/bin
 
 #: (pseudo)install package -> docker (move via bind)
@@ -24,7 +21,7 @@ RUN python3.8 -m pip install \
     -r requirements.txt
 
 #: ! explicitly set to --no-cache for installing the wheel
-RUN python3 -m pip install --no-cache-dir --user --upgrade $(ls *.whl | head -1)
+RUN python3.8 -m pip install --no-cache-dir --user --upgrade $(ls *.whl | head -1)
 
 
 # # # # # # #
