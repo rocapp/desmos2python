@@ -1,6 +1,17 @@
 # desmos2python
 seamless conversion between Desmos LaTeX equations &amp; executable Python code.
 
+## Notes
+
+Currently known to be compatible with `python3.8`
+(working on expanding compatibility)
+
+Definitely recommend using a virtual environment, e.g. via docker or conda.
+
+## Install
+
+`python3 -m pip install desmos2python`
+
 ## Example:
 
 ```python
