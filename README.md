@@ -7,7 +7,8 @@ seamless conversion between Desmos LaTeX equations &amp; executable Python code.
 
 import desmos2python as d2p
 
-# `file` contains a JSON-formatted list of latex equations ("ex.json")
+# `file` contains a JSON-formatted list of latex equations
+# By default, loads the example defined in 'resources/latex_json/ex.json'
 dlp = d2p.DesmosLatexParser(file=...)
 
 # `pycode_string` contains the ready-to-eval Desmos model namespace 
