@@ -1,4 +1,5 @@
 import numpy as np
+import builtins
 
 
 class GlobalConst:
@@ -7,16 +8,16 @@ class GlobalConst:
     """
 
     #: a (very) small number
-    EPS : float = 1e-13
+    EPS: float = 1e-13
 
     #: Conway's constant
-    CONWAY : float = 1.303577269034296391257099112152551890730702504659404875754861390628550
+    CONWAY: float = 1.303577269034296391257099112152551890730702504659404875754861390628550
 
     #: Pi^4
-    PI4 : float = 97.40909103400243723644033268870511124972758567268542169146785938997085
+    PI4: float = 97.40909103400243723644033268870511124972758567268542169146785938997085
 
     #: Dirichlet L(4,chi) [ ref : https://tinyurl.com/dirichletL4 ]
-    DIRL4 : float = PI4 / 96.0
+    DIRL4: float = PI4 / 96.0
 
     #: sqrt(2) (1.4142135623730951...)
     SQRT2 = np.sqrt(2.0)
@@ -36,7 +37,6 @@ class GlobalConst:
 #: alias
 GlobalConsts = GlobalConst
 
-import builtins
 """Global consts -> global namespace:
 """
 builtins.__dict__.update(vars(GlobalConsts))

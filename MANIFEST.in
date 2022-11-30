@@ -1,14 +1,7 @@
-recursive-include resources *
-recursive-include resources/javascript *.js
-recursive-include resources/templates *.*jinja2
-recursive-include resources/latex_json *.json
-include AUTHORS.rst
 include LICENSE
 include README.md
-
-recursive-include tests *.py
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
-recursive-exclude * *.*~
-
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif *.js *.*jinja2
+include requirements.txt
+prune **/__pycache__
+recursive-include desmos2python *.pyi
+recursive-include resources *.pyi *.js *.json *.pyjinja2
+include desmos2python/py.typed

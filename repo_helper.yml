@@ -1,0 +1,18 @@
+# Configuration for 'repo_helper' (https://github.com/repo-helper/repo_helper)
+---
+modname: 'desmos2python'
+copyright_years: '2022'
+author: 'Robert Ahlroth Capps'
+email: 'rcapps@teladochealth.com'
+username: 'rocapp'
+version: '0.0.8'
+license: 'MIT'
+short_desc: 'seamless conversion between Desmos LaTeX equations & executable Python
+  code.'
+
+enable_conda: false
+
+classifiers:
+ - 'Development Status :: 3 - Alpha'
+ - 'Intended Audience :: Developers'
+ - 'Topic :: Software Development :: Libraries :: Python Modules'

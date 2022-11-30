@@ -3,15 +3,16 @@ import logging
 import sys
 from pathlib import Path
 import unittest
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.use('Agg')
+
 rpath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
     __file__)), '..', 'src'))
 if rpath not in sys.path:
     sys.path.insert(0, rpath)
-
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 
 class TestDesmosWebSession(unittest.TestCase):
@@ -59,5 +60,5 @@ class TestDesmos2Python(unittest.TestCase):
         self.dmn = dmn
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     unittest.main()
