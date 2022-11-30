@@ -4,6 +4,6 @@ numpy
 matplotlib
 jinja2
 sympy
-antlr4-python3-runtime==4.10
+antlr4-python3-runtime==4.11.1
 selenium
 pypandoc
