@@ -1,5 +1,5 @@
 setuptools >= 35.0.2	
-setuptools_scm >= 2.0.0, <3
+setuptools_scm >= 2.0.0, < 8
 wheel
 repo_helper
 tox
