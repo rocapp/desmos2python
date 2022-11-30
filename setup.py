@@ -3,7 +3,6 @@
 
 # stdlib
 import pathlib
-import shutil
 import sys
 
 # 3rd party
@@ -14,15 +13,14 @@ sys.path.append('.')
 repo_root = pathlib.Path(__file__).parent
 
 
-def myversion():
-
-    def clean_scheme(version):
-        return '.'.join([str(v) for v in version.tag.public.split('.')[:1]])
-    return {'local_scheme': clean_scheme}
+def clean_scheme(version, **kwds):
+    v = version.tag.public.split('+')[0]
+    return v
 
 
-setup(description="seamless conversion between Desmos LaTeX equations & " +
-      "executable Python code.", name="desmos2python",
-      use_scm_version=myversion, setup_requires=['setuptools_scm'])
-
-shutil.rmtree("desmos2python.egg-info", ignore_errors=True)
+setup(
+    name="desmos2python",
+    use_scm_version={'local_scheme': "no-local-version",
+                     },
+    setup_requires=['setuptools_scm'],
+    )

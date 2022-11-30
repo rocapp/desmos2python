@@ -12,6 +12,17 @@ short_desc: 'seamless conversion between Desmos LaTeX equations & executable Pyt
 
 enable_conda: false
 
+additional_ignore:
+ - _version.py
+ - "*.log"
+
+exclude_files:
+ - tox.ini
+ - pyproject.toml
+ - setup.py
+ - setup.cfg
+ - MANIFEST.in
+
 classifiers:
  - 'Development Status :: 3 - Alpha'
  - 'Intended Audience :: Developers'

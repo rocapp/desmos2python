@@ -14,8 +14,7 @@ Definitely recommend using a virtual environment, e.g. via docker or conda.
 
 ## Example:
 
-```python
-
+```
 import desmos2python as d2p
 
 # `file` contains a JSON-formatted list of latex equations
@@ -34,5 +33,4 @@ result = dmn.E([1, 2, 3])
 print(result)
 
 # see ./tests for more examples!
-
 ```
