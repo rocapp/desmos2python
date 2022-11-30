@@ -1,8 +1,10 @@
-FROM ubuntu:rolling as base
+FROM ubuntu:rolling as ubuntu
+FROM python:3.8.15 as base
+
 LABEL Author, Robert Ahlroth Capps
 
 RUN apt-get update && \
-    apt-get install -yqq tox firefox
+    apt-get install -yqq tox git
 
 ENV PATH=${PATH}:/root/.local:/root/.local/bin
 
@@ -17,7 +19,7 @@ COPY requirements.txt ${APP_HOME}
 WORKDIR ${APP_HOME}
 #: explicit cache dir
 ENV PIP_CACHE_DIR=/root/.cache
-RUN python3 -m pip install \
+RUN python3.8 -m pip install \
     --no-warn-script-location --user --upgrade \
     -r requirements.txt
 

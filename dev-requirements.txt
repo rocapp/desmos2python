@@ -5,3 +5,4 @@ repo_helper
 tox
 flake8
 autopep8
+pypandoc

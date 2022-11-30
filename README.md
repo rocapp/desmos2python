@@ -14,7 +14,7 @@ Definitely recommend using a virtual environment, e.g. via docker or conda.
 
 ## Example:
 
-```
+```python
 import desmos2python as d2p
 
 # `file` contains a JSON-formatted list of latex equations

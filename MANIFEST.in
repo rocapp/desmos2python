@@ -5,6 +5,7 @@ recursive-include resources/latex_json *.json
 include AUTHORS.rst
 include LICENSE
 include README.md
+include README.rst
 
 recursive-include tests *.py
 recursive-exclude * __pycache__

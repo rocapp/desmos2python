@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# This file is managed by 'repo_helper'. Don't edit it directly.
 
 # stdlib
 import pathlib
@@ -12,15 +11,8 @@ sys.path.append('.')
 
 repo_root = pathlib.Path(__file__).parent
 
-
-def clean_scheme(version, **kwds):
-    v = version.tag.public.split('+')[0]
-    return v
-
-
 setup(
     name="desmos2python",
-    use_scm_version={'local_scheme': "no-local-version",
-                     },
+    use_scm_version={"local_scheme": "node-and-timestamp"},
     setup_requires=['setuptools_scm'],
     )

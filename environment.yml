@@ -18,3 +18,4 @@ dependencies:
   - jinja2
   - selenium
   - geckodriver
+  - pypandoc
