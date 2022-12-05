@@ -15,12 +15,20 @@ rootpath = get_rootpath()
 if rootpath not in sys.path:
     sys.path.insert(0, rootpath)
 
-#: other imports
+#: d2p api-level imports
 import desmos2python.utils as utils
+
 import desmos2python.latex as latex
 from desmos2python.latex import DesmosLatexParser
+
 import desmos2python.browser as browser
 from desmos2python.browser import DesmosWebSession
+
+import desmos2python.api as api
+from desmos2python.api import (
+    make_latex_parser, make_web_session,
+    export_graph_and_parse,
+)
 
 
 __all__ = [
@@ -28,4 +36,7 @@ __all__ = [
     'get_rootpath',
     'DesmosLatexParser',
     'DesmosWebSession',
+    'make_latex_parser',
+    'make_web_session',
+    'export_graph_and_parse',
 ]

@@ -487,7 +487,7 @@ def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
                 logging.warning(traceback.format_exc())
                 #: ! replace desmos-style lists with latex lists
                 line_repl = SympyPatterns.subn(line, key='desmos_list')
-                if line_repl[1] > 0:
+                if line_repl[1] > 0 and line_repl[0] is not None:
                     line = line_repl[0]
                     out_list.append(line)
             else:
