@@ -7,8 +7,7 @@ author: 'Robert Ahlroth Capps'
 email: 'rcapps@teladochealth.com'
 username: 'rocapp'
 license: 'MIT'
-short_desc: 'seamless conversion between Desmos LaTeX equations & executable Python
-  code.'
+short_desc: 'convert Desmos equations to executable Python code.'
 
 enable_conda: false
 
