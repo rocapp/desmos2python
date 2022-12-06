@@ -38,6 +38,10 @@ write_to = "desmos2python/_version.py"
 zip-safe = false
 include-package-data = true
 platforms = [ "Windows", "macOS", "Linux",]
+exclude = [
+	"repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
+	"Makefile", "environment.yml", "*.log", ".gitattributes", ".github/*",
+]
 
 [tool.whey]
 base-classifiers = []

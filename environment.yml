@@ -12,7 +12,6 @@ dependencies:
   - wheel
   - numpy
   - matplotlib
-  - PyQt5
   - sympy
   - antlr4-python3-runtime==4.10
   - jinja2
