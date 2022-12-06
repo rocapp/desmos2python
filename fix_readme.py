@@ -15,7 +15,7 @@ def convert2rst():
     download_pandoc()
     os.system('dpkg -x ./$(ls pandoc*.deb|head -1) pandoc_bin')
     #: convert -> rst
-    os.system('pandoc -s README.md -t rst -o README.rst~')
+    os.system('./pandoc_bin/usr/bin/pandoc -s README.md -t rst -o README.rst~')
     with open('README.rst~', 'r') as f:
         long_description = f.read()
     pattern = re.compile(

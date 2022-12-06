@@ -10,6 +10,7 @@ convert Desmos equations to executable Python code.
     - [TOC](#toc)
     - [Links](#links)
     - [Notes](#notes)
+        - [Dependencies](#dependencies)
         - [Compatibility](#compatibility)
         - [Helpful tips](#helpful-tips)
     - [Install](#install)
@@ -28,6 +29,16 @@ convert Desmos equations to executable Python code.
 - [Desmos Graphing Caculator](https://desmos.com/calculator)
 
 ## Notes
+
+### Dependencies
+
+**Libraries** (Ubuntu package names)
+
+*(optional) For headless browser functionality (uses `selenium`):*
+
+- `libxext6`
+- `libxt6`
+- `geckodriver` and `firefox`
 
 ### Compatibility
 
