@@ -8,7 +8,7 @@ import logging
 
 # 3rd party
 from setuptools import setup
-
+from setuptools_scm import get_version
 
 rootdir = str(Path('.').resolve())
 if rootdir not in sys.path:
@@ -25,8 +25,8 @@ logger.setLevel(orig_lvl)
 
 setup(
     name = "desmos2python",
-    use_scm_version = {"local_scheme": "no-local-version",
-                       "version_scheme": "release-branch-semver"},
+    use_scm_version = {"local_scheme": "no-local-version",},
+    version = get_version().split('.dev')[0],
     setup_requires = ['setuptools_scm', 'numpy'],
     cmdclass = {"init_resources_d2p": init_resources_d2p},
 )
