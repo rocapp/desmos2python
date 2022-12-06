@@ -62,12 +62,12 @@ test-all: clean-build clean-tox ## Run tests on every Python version with tox
 .PHONY: build
 build: clean ## Package and upload release
 	@echo "+ $@"
-	@./build.sh
+	@tox -r -e prebuild -e build
 
 .PHONY: release
 release: build ## Package and upload release
 	@echo "+ $@"
-	@./deploy.sh
+	@/bin/bash -c './deploy.sh'
 
 .PHONY: sdist
 sdist: clean ## Build sdist distribution
