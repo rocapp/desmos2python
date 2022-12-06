@@ -36,7 +36,6 @@ write_to = "desmos2python/_version.py"
 
 [tool.setuptools]
 zip-safe = false
-include-package-data = true
 platforms = [ "Windows", "macOS", "Linux",]
 
 [tool.whey]
@@ -127,7 +126,6 @@ autodoc_exclude_members = [
 
 [tool.mypy]
 python_version = "3.8"
-namespace_packages = true
 check_untyped_defs = true
 warn_unused_ignores = true
 no_implicit_optional = true
@@ -156,13 +154,20 @@ file = [ "requirements/dev-requirements.txt", "requirements/requirements.txt", ]
 [tool.setuptools.packages.find]
 where = [ ".", "desmos2python", ]
 include = [ "desmos2python*", "desmos2python.resources*",]
-#: ! exclude from build...
-exclude = [
-	"repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
-	"Makefile", "environment.yml", "*.log", ".gitattributes*", ".dependabot*",
-        ".github*", "git_archival.txt", ".devcontainer.json", ".imgbotconfig*",
-        ".pylintrc", ".pre-commit-config.yaml", ".gitignore", ".style.yapf",
-        ".readthedocs.yml"
+#: don't consider tests a separate package...
+exclude = ["tests",]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.*jinja2", "*.js"]
+
+#: ref: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#exclude-package-data
+[tool.setuptools.exclude-package-data]
+"*" = [
+  "repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
+  "Makefile", "environment.yml", "*.log", ".gitattributes*", ".dependabot*",
+  ".github*", "git_archival.txt", ".devcontainer.json", ".imgbotconfig*",
+  ".pylintrc", ".pre-commit-config.yaml", ".gitignore", ".style.yapf",
+  ".readthedocs.yml",
 ]
 
 [tool.snippet-fmt.languages.python]
