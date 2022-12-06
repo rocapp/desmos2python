@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-keywords = []
+keywords = ["desmos", "graphing calculator", "conversion", "convert to python", "mathematical modeling"]
 
 [[project.authors]]
 name = "Robert Ahlroth Capps"
@@ -38,10 +38,6 @@ write_to = "desmos2python/_version.py"
 zip-safe = false
 include-package-data = true
 platforms = [ "Windows", "macOS", "Linux",]
-exclude = [
-	"repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
-	"Makefile", "environment.yml", "*.log", ".gitattributes", ".github/*",
-]
 
 [tool.whey]
 base-classifiers = []
@@ -140,7 +136,7 @@ show_error_codes = true
 [tool.snippet-fmt]
 directives = [ "code-block",]
 
-[tool.dependency-dash."requirements.txt"]
+[tool.dependency-dash."requirements/requirements.txt"]
 order = 10
 
 [tool.dependency-dash."tests/requirements.txt"]
@@ -155,12 +151,19 @@ include = false
 file = [ "README.rst",]
 
 [tool.setuptools.dynamic.dependencies]
-file = [ "requirements.txt",]
+file = [ "requirements/dev-requirements.txt", "requirements/requirements.txt", ]
 
 [tool.setuptools.packages.find]
-where = [ ".", "desmos2python",]
+where = [ ".", "desmos2python", ]
 include = [ "desmos2python*", "desmos2python.resources*",]
-exclude = [ "tests",]
+#: ! exclude from build...
+exclude = [
+	"repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
+	"Makefile", "environment.yml", "*.log", ".gitattributes*", ".dependabot*",
+        ".github*", "git_archival.txt", ".devcontainer.json", ".imgbotconfig*",
+        ".pylintrc", ".pre-commit-config.yaml", ".gitignore", ".style.yapf",
+        ".readthedocs.yml"
+]
 
 [tool.snippet-fmt.languages.python]
 reformat = true

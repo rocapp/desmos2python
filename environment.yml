@@ -4,9 +4,10 @@ channels:
   - python
   - defaults
 dependencies:
-  - python~=3.8
+  - python=3.8
   - pip
   - flake8
+  - build[virtualenv]>=0.3.1
   - setuptools >= 35.0.2
   - setuptools-scm
   - wheel
