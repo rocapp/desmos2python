@@ -4,6 +4,7 @@
 from pathlib import Path
 import sys
 import importlib
+import logging
 
 # 3rd party
 from setuptools import setup
@@ -12,14 +13,20 @@ from setuptools import setup
 rootdir = str(Path('.').resolve())
 if rootdir not in sys.path:
     sys.path.insert(0, rootdir)
+
+logger = logging.getLogger()
+orig_lvl = logger.getEffectiveLevel()
+logger.setLevel(logging.ERROR)
 init_resources_d2p = \
     importlib \
     .import_module('._setuptools_ext', package='desmos2python') \
     .init_resources_d2p
+logger.setLevel(orig_lvl)
 
 setup(
     name = "desmos2python",
-    use_scm_version = {"local_scheme": "node-and-timestamp"},
-    setup_requires = ['setuptools_scm','numpy'],
+    use_scm_version = {"local_scheme": "no-local-version",
+                       "version_scheme": "release-branch-semver"},
+    setup_requires = ['setuptools_scm', 'numpy'],
     cmdclass = {"init_resources_d2p": init_resources_d2p},
 )
