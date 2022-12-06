@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common import JavascriptException
 from functools import cached_property
+from pathlib import Path
 import importlib
 import importlib.resources
 import importlib.util
@@ -26,7 +27,7 @@ class DesmosWebSession(object):
     """
 
     desmos_url_head = 'https://www.desmos.com/calculator/'
-    
+
     def __init__(self, url='8tb0onyoep', title: AnyStr = None):
         self._user_title = title
         self.url = self.format_url(url)
@@ -86,7 +87,7 @@ class DesmosWebSession(object):
     @property
     def title(self):
         """Session title.
-        
+
         Returns:
         `title` (string) If provided, the user-specified title, else
         ...returns the browser window's current title.
@@ -125,7 +126,7 @@ class DesmosWebSession(object):
             expression.get('latex') for expression in self.expressions_list
             if expression.get('latex') is not None
         ]
-    
+
     @property
     def output_filename(self):
         output_filename = self.title.replace(' ', '_')
@@ -138,14 +139,15 @@ class DesmosWebSession(object):
     default_output_dir = D2P_Resources\
         .get_user_resources_path()\
         .joinpath('latex_json')
-    
-    def export_latex2json(self, latex_list=None, output_filename=None, output_dir=None):
+
+    def export_latex2json(self, latex_list=None, output_filename=None,
+                          output_dir=None):
         """export latex_list -> output_filename (JSON list)"""
         if latex_list is None:
             latex_list = self.latex_list
         if output_filename is None:
             output_filename = self.output_filename
-        if json_dir is None:
+        if output_dir is None:
             output_dir = DesmosWebSession.default_output_dir
         outpath = Path(output_dir) \
             .joinpath(output_filename)

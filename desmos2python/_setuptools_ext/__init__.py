@@ -1,1 +1,1 @@
-from ._setuptools_ext import prebuild_d2p
+from ._setuptools_ext import init_resources_d2p

@@ -1,11 +1,15 @@
 """_setuptools_ext.py: extensions for setuptools commands.
 """
-from setuptools import Command
+from distutils.cmd import Command
 from desmos2python.utils import D2P_Resources
 
+__all__ = [
+    'init_resources_d2p',
+]
 
-class prebuild_d2p(Command):
-    """Pre-build setuptools extension commands for desmos2python.
+
+class init_resources_d2p(Command):
+    """custom setuptools command for initializing desmos2python resources.
 
     ref: https://github.com/pypa/setuptools/blob/1c3b501535a856838a077d50989a5c019d2db679/setuptools/_distutils/cmd.py#L17
     """
@@ -35,7 +39,7 @@ class prebuild_d2p(Command):
             assert pkg_link.resolve().exists() is True
 
     def run(self):
-        """Perform prebuild actions, namely to initialize desmos2python package/user-local resources.
+        """initialize desmos2python package/user-local resources.
 
         - create the user resources directory if it doesn't exist.
         - symlink package resources to `$HOME/.local/share/desmos2python/` directory.

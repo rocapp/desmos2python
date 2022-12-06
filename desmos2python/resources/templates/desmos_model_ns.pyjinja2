@@ -3,9 +3,27 @@
 class {{ ns_name }}(object):
 
     def __init__(self, **kwds):
+    {% for param_line in parameters %}
+        self._{{ param_line.pycode_fixed }}
+    {% endfor %}
         #: ! update parameters on construction
-        self.__dict__.update(kwds)
+        if len(kwds) > 0:
+            for k in kwds:
+                setattr(self, '_'+k if '_' != k[0] else k, kwds.get(k))
+        self.setup_equations()
 
+{% for param_line in parameters %}
+    @property
+    def {{ param_line.param_name }}(self):
+        return self._{{ param_line.param_name }}
+    @{{ param_line.param_name }}.setter
+    def {{ param_line.param_name }}(self, new):
+        self._{{ param_line.param_name }} = new
+        #: ! re-init equations
+        self.setup_equations()
+{% endfor %}
+
+    def setup_equations(self):
         #: Define vectorized functions (instance-level)
 {% for equation in equations %}
         self.{{ equation.func_vectorized }}
@@ -18,9 +36,6 @@ class {{ ns_name }}(object):
 
     #: Parameters:
     params = tuple(({% for param_line in parameters %} '{{ param_line.param_name }}', {% endfor %}))
-{% for param_line in parameters %}
-    {{ param_line.pycode_fixed }}
-{% endfor %}
 
     #: (Functions) State Equations:
     output_keys = tuple(({% for equation in equations %}

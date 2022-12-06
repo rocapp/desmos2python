@@ -5,7 +5,7 @@ import importlib.resources
 
 __all__ = [
     'flatten', 'flatten_list', 'flatten_nested_list',
-    'D2PResources',
+    'D2P_Resources',
 ]
 
 

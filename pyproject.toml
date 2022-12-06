@@ -149,7 +149,7 @@ include = false
 file = [ "README.rst",]
 
 [tool.setuptools.dynamic.dependencies]
-file = [ "requirements/dev-requirements.txt", "requirements/requirements.txt", ]
+file = [ "requirements/dev-requirements.txt", "requirements/build-requirements.txt", "requirements/requirements.txt", ]
 
 [tool.setuptools.packages.find]
 where = [ ".", "desmos2python", ]

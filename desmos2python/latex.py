@@ -5,7 +5,6 @@ import logging
 import json
 import re
 import traceback
-import ast
 from pathlib import Path
 from functools import cached_property
 import importlib
@@ -13,12 +12,10 @@ import importlib.resources
 import importlib.util
 import numpy as np
 import sympy as sp
-from sympy.utilities.lambdify import implemented_function
 from sympy.parsing.latex import parse_latex
 from sympy import pycode
-from sympy.solvers.solveset import nonlinsolve
 from jinja2 import Environment, FileSystemLoader
-from typing import AnyStr, List, Dict, Union
+from typing import AnyStr, List, Dict, Union, Container
 from desmos2python._logger import LoggingContext
 from desmos2python.consts import GlobalConsts
 from desmos2python.utils import flatten, D2P_Resources
@@ -44,13 +41,35 @@ class DesmosLinesContainer:
     """
     
     def __init__(self, lines=[]):
+        self._lines = []
         self.lines = lines
+
+    @property
+    def lines(self):
+        if self._lines is None:
+            self._lines = []
+        return self._lines
+    @lines.setter
+    def lines(self, new):
+        if new is None:
+            self._lines = []
+            return
+        if isinstance(new, DesmosLinesContainer):
+            new = new.lines
+        self._lines = new
+
+    def __len__(self):
+        return len(self.lines)
 
     def _ipython_key_completions_(self):
         return ['lines', ]
 
     def __str__(self):
-        return f'{self.__class__.__name__}(length={len(self.lines):03d})'
+        head = f'{self.__class__.__name__}(length={len(self.lines):03d})'
+        tail = str(self.lines)
+        if len(tail) > 100:
+            tail = tail[:100] + '\n...' + tail[-100:].rstrip(']') + '\n...]'
+        return f'{head}\n{tail}'
 
     def __repr__(self):
         return self.__str__()
@@ -62,10 +81,7 @@ class DesmosLinesContainer:
         self.lines[item] = value
 
     def __iter__(self):
-        return self
-    
-    def __next__(self):
-        return self.lines.__next__()
+        return iter(self.lines)
 
     def __getattribute__(self, name):
         return object.__getattribute__(self, name)
@@ -74,11 +90,19 @@ class DesmosLinesContainer:
         """use the corresponding attribute in `self.lines` if not otherwise defined"""
         return object.__getattribute__(self.lines, name)
 
+    @property
+    def empty(self):
+        """flag indicates whether wrapped list is empty or not"""
+        return len(self.lines) == 0
+
 
 class DesmosLatexParser:
 
     """Helper class for parsing Desmos LaTeX equations.
-    """ 
+    """
+
+    def _ipython_key_completions_(self):
+        return []
 
     def __init__(self, expr_str: AnyStr = None, lines: List[AnyStr] = None,
                  fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = True,
@@ -96,13 +120,15 @@ class DesmosLatexParser:
         self.auto_exec = auto_exec
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
-        self.fpath: AnyStr = fpath
-        self._lines: DesmosLinesContainer = DesmosLinesContainer(lines=lines)
+        self._fpath: AnyStr = None
+        self._lines: DesmosLinesContainer = DesmosLinesContainer()
+        self.lines, self.fpath = lines, fpath
         if auto_init is True:
             self.setup(expr_str=expr_str, lines=self.lines,
                        fpath=self.fpath, **kwds)
-        if auto_exec is True:
-            self.exec_pycode()  # ! modifies namespace if `auto_exec` is True
+            if auto_exec is True:  # ! only does anything if auto_init is True.
+                #: ! modifies namespace if `auto_exec` is True
+                self.exec_pycode()
 
     def reset_cached(self):
         """reset all cached properties"""
@@ -114,11 +140,21 @@ class DesmosLatexParser:
             object.__delattr__(self, clines)
 
     @property
+    def fpath(self):
+        return self._fpath
+    @fpath.setter
+    def fpath(self, new):
+        self._fpath = Path(new)
+
+    @property
     def lines(self):
         return self._lines
     @lines.setter
     def lines(self, new):
-        self._lines.lines = new
+        if isinstance(new, Container):
+            self._lines.lines = DesmosLinesContainer(lines=new)
+        elif isinstance(new, DesmosLinesContainer):
+            self._lines = new
 
     @cached_property
     def env(self):
@@ -148,9 +184,14 @@ class DesmosLatexParser:
     def template_vars(self, newtemp):
         self._template_vars = newtemp
 
-    def setup(self, expr_str=None, lines=None, fpath=None, reset=False, **kwds):
+    def setup(self, expr_str=None, lines=None, fpath=None, reset=False,
+              **kwds):
         if reset is True:
             self.lines, self.fpath = None, None
+        if fpath is not None:
+            self.fpath = Path(fpath)
+        if self.fpath is not None:
+            self.fpath = DesmosLatexParser.get_fpath(pattern='*'+self.fpath.stem+'*')
         if lines is None:
             lines = self.lines
         if fpath is None and self.fpath is None:
@@ -158,15 +199,18 @@ class DesmosLatexParser:
             self.fpath = DesmosLatexParser.get_fpath(**kwds)
         if expr_str is not None:
             self.lines = expr_str.split('\n')
-        if fpath is not None and self.lines is None:
+        if self.fpath is not None and (self.lines.empty or reset is True):
             self.lines = DesmosLatexParser.read_file(self.fpath)
-        if self.lines is None:
+        if self.lines.empty:
             self.setup(fpath=self.fpath)
         return self.lines
 
     @property
     def latex_lines(self):
         return self.lines
+    @latex_lines.setter
+    def latex_lines(self, new):
+        self.lines = new
 
     @cached_property
     def sympy_lines(self):
@@ -188,14 +232,15 @@ class DesmosLatexParser:
         dlc_plines = DesmosLinesContainer()
         try:
             plines_raw = self.parse2pycode(self.sympy_lines)
-            dlc_plines.lines = self.fix_pycode_line(plines_raw, from_sympy=False)
+            dlc_plines.lines = DesmosLatexParser.fix_pycode_line(
+                plines_raw, from_sympy=False)
         except Exception:
             logging.warning(traceback.format_exc())
         finally:
             return dlc_plines
 
     @staticmethod
-    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy: bool = False):
+    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy: bool = False, verbosity=logging.ERROR):
         """fix a line after `sympy.pycode(line)`.
 
         >>> line = '  # Not supported in Python:\\n  # E\\n(E(x) == 1/(1 + math.exp(-2*x)))'
@@ -203,6 +248,8 @@ class DesmosLatexParser:
         '(E(x) == 1/(1 + math.exp(-2*x)))'
 
         """
+        if isinstance(pline, DesmosLinesContainer):
+            pline = pline.lines
         if isinstance(pline, list):
             plines = [DesmosLatexParser.fix_pycode_line(pl) for pl in pline]
             if isinstance(plines[0], list):
@@ -212,7 +259,8 @@ class DesmosLatexParser:
             if from_sympy is True:
                 pline = pycode(pline)
         except Exception:
-            logging.warning(traceback.format_exc())
+            with LoggingContext(logger, level=verbosity) as logctx:
+                logging.warning(traceback.format_exc())
         pline = pline \
             .split('# Not supported in Python:\n  #')[-1] \
             .split('\n')[-1]
@@ -353,14 +401,10 @@ class DesmosLatexParser:
     @classmethod
     def parse2sympy(cls, lines):
         """Get `self.sympy_lines`"""
+        if isinstance(lines, DesmosLinesContainer):
+            lines = lines.lines
         parsed_lines = parse_latex_lines2sympy(lines)
-        try:
-            sympy_lines = sp.factor_terms(parsed_lines)
-        except sp.SympifyError:
-            logging.warning(traceback.format_exc())
-            sympy_lines = parsed_lines
-        finally:
-            return sympy_lines
+        return DesmosLinesContainer(lines=parsed_lines)
 
     @staticmethod
     def get_fpath(**kwds):
@@ -373,13 +417,34 @@ class DesmosLatexParser:
         return lines
 
 
-class PycodePatterns:
+class PatternsMixIn:
+
+    """helper methods for regex patterns"""
+    
+    @classmethod
+    def subn(cls, string, key='desmos_list', repl_key=None, custom_repl=None):
+        if repl_key is None:
+            repl_key = key
+        p = getattr(cls, f'{key}_pattern')
+        if custom_repl is None:
+            r = getattr(cls, f'{repl_key}_repl')
+        else:
+            r = custom_repl
+        return re.subn(pattern=p, repl=r, string=string)
+
+
+class PycodePatterns(PatternsMixIn):
 
     """Pre-compiled regex patterns for `fix_raw_pycode(...)`.
     """
 
     #: identify subscripts pattern
     subscript_pattern = re.compile(r'_\{([a-zA-Z0-9]+)\}')
+    subscript_repl = r'_\1'
+
+    #: same as above, but with multiple groups
+    subscript_grouped_pattern = re.compile(r'_\{([a-zA-Z0-9])([a-zA-Z0-9]+)\}')
+    subscript_grouped_repl = r'_{\1}'
 
     #: ! main template pattern
     main_line_pattern = re.compile(
@@ -416,7 +481,8 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     #: lines -> line (! handle list of strings)
     if not isinstance(line, str):
         lines = list(line)
-        return [fix_raw_pycode(ll, retfull=retfull) for ll in lines]
+        outlines = list(filter(lambda l: l is not None, [fix_raw_pycode(ll, retfull=retfull) for ll in lines]))
+        return outlines
     #: keep original line (! in preparation for `retfull`)
     line0 = str(line)
     #: ! Handle double-equals, leading and following parentheses...
@@ -424,8 +490,10 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     line = line.lstrip('(')[:-1]  # remove first and last parentheses
     line = line.replace('cdot ', 'cdot')  # remove extra spaces for cdot
     #: ! Handle '{', '}' -- namely for subscripted variables/functions
-    line = re.sub(pattern=PycodePatterns.subscript_pattern,
-                  repl=r'_\1', string=line)
+    try:
+        line = PycodePatterns.subn(PycodePatterns.subn(line, key='subscript_grouped')[0], key='subscript')[0]
+    except IndexError:
+        pass
     #: ! convert to actual python (numpy) syntax -- ready for `DesmosLatexParser.DesmosModelNS`
     pycode_fixed = re.sub(pattern=PycodePatterns.main_line_pattern,
                           repl=PycodePatterns.main_line_repl,
@@ -440,11 +508,17 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
         #: for free parameters (in Desmos, sliders)
         pycode_fixed = pycode_fixed.replace('==', '=')
         param_name = pycode_fixed.split(' ')[0]  # name of parameter
-        param_value = pycode_fixed.split(
-            '=')[1].strip()  # current value
+        try:
+            param_value = pycode_fixed.split(
+                '=')[1].strip()  # current value
+        except IndexError:
+            #: ! handle case in which this is neither a parameter, nor an equation
+            logging.warning(traceback.format_exc())
+            return None
         try:
             param_value = float(param_value)
         except Exception:
+            #: ! handle list-like parameters
             param_value = param_value \
                 .replace('[', '') \
                 .replace(']', '') \
@@ -485,7 +559,7 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     }
 
 
-class SympyPatterns:
+class SympyPatterns(PatternsMixIn):
     """Regex patterns for latex_lines -> sympy_lines.
     """
 
@@ -513,17 +587,11 @@ class SympyPatterns:
                      range(int(m.group(2)), 1+int(m.group(3)))]) +\
             '\end{{\itemize}}'
 
-    @classmethod
-    def subn(cls, string, key='desmos_list'):
-        p = getattr(cls, f'{key}_pattern')
-        r = getattr(cls, f'{key}_repl')
-        return re.subn(pattern=p, repl=r, string=string)
-
 
 def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     """Parse the given list of latex strings to sympy.
 
-    >>> parse_latex_lines2sympy(read_latex_lines(get_filepath()))
+    >>> parse_latex_lines2sympy(read_latex_lines(get_filepath(pattern='ex')))
     [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(x*(alpha_{m}*(alpha_{m} + 1))))]
 
     """
@@ -533,25 +601,28 @@ def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     latex_queue = Queue(maxsize=len(latex_list))
     for latex_line in latex_list:
         latex_queue.put(latex_line)
-    with LoggingContext(logger, level=verbosity):
-        while True:
-            line = latex_queue.get_nowait()
-            try:
-                out = parse_latex(line) \
-                    .subs('pi', GlobalConsts.M_PI)
-            except Exception:
+    while True:
+        line = latex_queue.get_nowait()
+        matches = PycodePatterns.subn(line, key='subscript_grouped')
+        if matches is not None and matches[1] > 0:
+            line = matches[0]
+        try:
+            out = parse_latex(line) \
+                .subs('pi', GlobalConsts.M_PI)
+        except Exception:
+            with LoggingContext(logger, level=verbosity) as log_ctx:
                 logging.warning(traceback.format_exc())
-                #: ! replace desmos-style lists with latex lists
-                line_repl = SympyPatterns.subn(line, key='desmos_list')
-                if line_repl[1] > 0 and line_repl[0] is not None:
-                    line = line_repl[0]
-                    out_list.append(line)
-            else:
-                out_list.append(out)
-            finally:
-                latex_queue.task_done()
-                if latex_queue.empty():
-                    break
+            #: ! replace desmos-style lists with latex lists
+            line_repl = SympyPatterns.subn(line, key='desmos_list')
+            if line_repl[1] > 0 and line_repl[0] is not None:
+                line = line_repl[0]
+                out_list.append(line)
+        else:
+            out_list.append(out)
+        finally:
+            latex_queue.task_done()
+            if latex_queue.empty():
+                break
     if len(out_list) == 1:
         return out_list[0]
     return out_list
@@ -579,8 +650,8 @@ def get_filepath(pattern='*', fext='json', n=1, **kwds):
     - $PREFIX/site-packages/desmos2python/resources/latex_json/
     """
     fpaths = []
-    for ldir in [ D2P_Resources.get_user_resources_path(),
-                  D2P_Resources.get_package_resources_path(), ]:
+    for ldir in [D2P_Resources.get_user_resources_path(),
+                 D2P_Resources.get_package_resources_path()]:
         fpths = list(
             ldir.joinpath('latex_json') \
             .rglob(f'*{pattern}.{fext}'
