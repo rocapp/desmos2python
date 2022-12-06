@@ -31,6 +31,8 @@ clean-build: ## Remove build artifacts
 	@rm -fr build/
 	@rm -fr dist/
 	@rm -fr *.egg-info
+	@rm -f *.deb
+	@rm -f .local-bashrc
 
 .PHONY: clean-pyc
 clean-pyc: ## Remove Python file artifacts

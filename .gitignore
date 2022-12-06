@@ -88,3 +88,4 @@ Pipfile.lock
 _version.py
 *.deb
 *~
+.local-bashrc
