@@ -60,14 +60,19 @@ test-all: clean-build clean-tox ## Run tests on every Python version with tox
 	@tox -r -n test -n qa
 
 .PHONY: build
-build: clean ## Package and upload release
+build: clean ## Package release
 	@echo "+ $@"
 	@tox -r -e prebuild -e build
 
-.PHONY: release
-release: build ## Package and upload release
+.PHONY: release-pypi
+release: build ## Package and upload release to pypi
 	@echo "+ $@"
-	@/bin/bash -c './deploy.sh'
+	@/bin/bash -c 'twine upload dist/*'
+
+.PHONY: release-github
+release: build ## Package and upload release to github
+	@echo "+ $@"
+	@/bin/bash -c 'gh release create'
 
 .PHONY: sdist
 sdist: clean ## Build sdist distribution

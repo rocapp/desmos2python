@@ -1,12 +1,43 @@
 # desmos2python
-seamless conversion between Desmos LaTeX equations &amp; executable Python code.
+convert Desmos equations to executable Python code.
+
+## TOC
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [desmos2python](#desmos2python)
+    - [TOC](#toc)
+    - [Links](#links)
+    - [Notes](#notes)
+        - [Compatibility](#compatibility)
+        - [Helpful tips](#helpful-tips)
+    - [Install](#install)
+    - [Examples](#examples)
+        - [`make_latex_parser` high-level API Example:](#make_latex_parser-high-level-api-example)
+        - [`DesmosLatexParser` API Example:](#desmoslatexparser-api-example)
+- [`file` contains a JSON-formatted list of latex equations](#file-contains-a-json-formatted-list-of-latex-equations)
+- [loads the example defined in 'resources/latex_json/ex.json'](#loads-the-example-defined-in-resourceslatex_jsonexjson)
+- [`pycode_string` contains the ready-to-eval Desmos model namespace](#pycode_string-contains-the-ready-to-eval-desmos-model-namespace)
+
+<!-- markdown-toc end -->
+
+## Links
+
+- [desmos2python (PyPI)](https://pypi.org/project/desmos2python/)
+- [Desmos Graphing Caculator](https://desmos.com/calculator)
 
 ## Notes
 
-Currently known to be compatible with `python3.8`
-(working on expanding compatibility)
+### Compatibility
 
-Definitely recommend using a virtual environment, e.g. via docker or conda.
+- `python3.8`
+
+NOTE: *working on expanding compatibility...*
+
+### Helpful tips
+
+*...definitely recommend using a virtual environment, e.g. via docker or conda.*
 
 ## Install
 

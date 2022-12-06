@@ -25,8 +25,7 @@ logger.setLevel(orig_lvl)
 
 setup(
     name = "desmos2python",
-    use_scm_version = {"local_scheme": "no-local-version",},
-    version = get_version().split('.dev')[0],
-    setup_requires = ['setuptools_scm', 'numpy'],
+    version = get_version(git_describe_command='git describe --tags'),
+    setup_requires = ['setuptools_scm', 'numpy', 'docutils'],
     cmdclass = {"init_resources_d2p": init_resources_d2p},
 )
