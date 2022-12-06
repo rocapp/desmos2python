@@ -11,7 +11,7 @@ include pyproject.toml
 recursive-include desmos2python *.py
 recursive-include requirements *.txt
 recursive-exclude * __pycache__
-exclude .dependabot *
+exclude .dependabot
 exclude .devcontainer.json
 exclude .imgbotconfig
 exclude .pre-commit-config.yaml
@@ -20,8 +20,12 @@ exclude .style.yapf
 exclude .readthedocs.yml
 exclude .pylintrc
 exclude .gitignore
+exclude scripts
+exclude _config_templates
 recursive-exclude .github *
 recursive-exclude .dependabot *
+recursive-exclude _config_templates *
+recursive-exclude scripts *
 global-exclude *.*[~]
 recursive-exclude .tox *
 include setup.cfg
