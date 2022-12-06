@@ -3,6 +3,7 @@ setuptools_scm
 wheel
 repo_helper
 tox
+tox-envlist
 flake8
 autopep8
 pypandoc

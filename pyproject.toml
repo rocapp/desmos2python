@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "setuptools>=40.6.0", "setuptools-scm", "wheel>=0.34.2", ]
+requires = [ "setuptools>=40.6.0", "setuptools-scm", "wheel>=0.34.2", "tox-envlist" ]
 build-backend = "setuptools.build_meta"
 
 [project]
