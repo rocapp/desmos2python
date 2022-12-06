@@ -8,7 +8,6 @@ import logging
 
 # 3rd party
 from setuptools import setup
-from setuptools_scm import get_version
 
 rootdir = str(Path('.').resolve())
 if rootdir not in sys.path:
@@ -25,7 +24,6 @@ logger.setLevel(orig_lvl)
 
 setup(
     name = "desmos2python",
-    version = get_version(git_describe_command='git describe --tags'),
-    setup_requires = ['setuptools_scm', 'numpy', 'docutils'],
+    setup_requires = ['numpy', 'docutils'],
     cmdclass = {"init_resources_d2p": init_resources_d2p},
 )

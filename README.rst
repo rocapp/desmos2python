@@ -12,6 +12,17 @@ Links
 Notes
 -----
 
+Dependencies
+~~~~~~~~~~~~
+
+**Libraries** (Ubuntu package names)
+
+*(optional) For headless browser functionality (uses ``selenium``):*
+
+-  ``libxext6``
+-  ``libxt6``
+-  ``geckodriver`` and ``firefox``
+
 Compatibility
 ~~~~~~~~~~~~~
 
