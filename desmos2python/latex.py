@@ -1,4 +1,6 @@
 from queue import Queue
+from os import PathLike
+import inspect
 import logging
 import json
 import re
@@ -17,11 +19,15 @@ from sympy import pycode
 from sympy.solvers.solveset import nonlinsolve
 from jinja2 import Environment, FileSystemLoader
 from typing import AnyStr, List, Dict, Union
-from desmos2python import get_rootpath
 from desmos2python._logger import LoggingContext
 from desmos2python.consts import GlobalConsts
-from desmos2python.utils import flatten
+from desmos2python.utils import flatten, D2P_Resources
 import builtins
+
+__all__ = [
+    'DesmosLinesContainer',
+    'DesmosLatexParser',
+]    
 
 #: update builtin globals with numerical constants
 builtins.__dict__.update(vars(GlobalConsts))
@@ -29,14 +35,50 @@ builtins.__dict__.update(vars(GlobalConsts))
 #: instantiate namespace-specific logger
 logger = logging.getLogger(__name__)
 
-#: get the package path
-rootpath = get_rootpath()
+
+class DesmosLinesContainer:
+
+    """wrapper to avoid warnings/errors for ipython tab-completion.
+
+    ref: https://ipython.readthedocs.io/en/stable/config/integrating.html#tab-completion
+    """
+    
+    def __init__(self, lines=[]):
+        self.lines = lines
+
+    def _ipython_key_completions_(self):
+        return ['lines', ]
+
+    def __str__(self):
+        return f'{self.__class__.__name__}(length={len(self.lines):03d})'
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __getitem__(self, item):
+        return self.lines[item]
+
+    def __setitem__(self, item, value):
+        self.lines[item] = value
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        return self.lines.__next__()
+
+    def __getattribute__(self, name):
+        return object.__getattribute__(self, name)
+
+    def __getattr__(self, name):
+        """use the corresponding attribute in `self.lines` if not otherwise defined"""
+        return object.__getattribute__(self.lines, name)
 
 
-class DesmosLatexParser(object):
+class DesmosLatexParser:
 
     """Helper class for parsing Desmos LaTeX equations.
-    """
+    """ 
 
     def __init__(self, expr_str: AnyStr = None, lines: List[AnyStr] = None,
                  fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = True,
@@ -55,21 +97,38 @@ class DesmosLatexParser(object):
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
         self.fpath: AnyStr = fpath
-        self.lines: List = lines
+        self._lines: DesmosLinesContainer = DesmosLinesContainer(lines=lines)
         if auto_init is True:
             self.setup(expr_str=expr_str, lines=self.lines,
                        fpath=self.fpath, **kwds)
         if auto_exec is True:
             self.exec_pycode()  # ! modifies namespace if `auto_exec` is True
 
+    def reset_cached(self):
+        """reset all cached properties"""
+        cached_lines = filter(
+            lambda a: all([a.kind == 'data', '_lines' in a.name]),
+            inspect.classify_class_attrs(self)
+        )
+        for clines in cached_lines:
+            object.__delattr__(self, clines)
+
     @property
+    def lines(self):
+        return self._lines
+    @lines.setter
+    def lines(self, new):
+        self._lines.lines = new
+
+    @cached_property
     def env(self):
         return self.init_jinja_env()
 
     def init_jinja_env(self):
         #: initialize environment -> instance
-        with importlib.resources.path('resources', 'templates') as tpath:
-            templates_dir = tpath
+        templates_dir = D2P_Resources \
+            .get_package_resources_path() \
+            .joinpath('templates')
         env = Environment(autoescape=False, optimized=True,
                           loader=FileSystemLoader(
                               searchpath=[
@@ -109,55 +168,31 @@ class DesmosLatexParser(object):
     def latex_lines(self):
         return self.lines
 
-    @property
+    @cached_property
     def sympy_lines(self):
         """
         >>> DesmosLatexParser(auto_init=True, auto_exec=False).sympy_lines
         [Eq(E(x), 1/(1 + exp(-2*x))), Eq(alpha_{m}, 1), Eq(F(x), E(alpha_{m}*x*(alpha_{m} + 1)))]
 
         """
-        return self.parse2sympy(self.latex_lines)
+        slines = DesmosLinesContainer(lines=[])
+        try:
+            slines.lines = self.parse2sympy(self.latex_lines)
+        except Exception:
+            logging.warning(traceback.format_exc())
+        finally:
+            return slines
 
-    @property
+    @cached_property
     def pycode_lines(self):
-        return self.fix_pycode_line(
-            self.parse2pycode(self.sympy_lines), from_sympy=False)
-
-    @property
-    def syms(self):
-        """get all symbols"""
-        return sp.symbols(' '.join(list(set([a.lhs.name for a in self.expr.args]))))
-
-    @property
-    def expr(self):
-        expr = sp.Expr(*self.sympy_lines)
-        subs_dict = {'E': self.sympy_lines[0].rhs, 'pi': GlobalConsts.M_PI}
-        for a in expr.args:
-            if hasattr(a, 'rhs'):
-                if isinstance(a.rhs, float):
-                    subs_dict[a.lhs.name] = a.rhs
-        expr_out = expr \
-            .subs(subs_dict) \
-            .simplify()
-        return expr_out
-
-    @property
-    def system(self):
-        """lambdified system of equations"""
-        expr = self.expr.replace(
-            lambda arg: arg.is_Equality,
-            lambda arg: implemented_function(arg.lhs.name, arg.rhs)
-        )
-        system_lamb = sp.lambdify(self.syms, expr, modules=['scipy', 'numpy'],
-                                  cse=True, dummify=True)
-        return system_lamb
-
-    @property
-    def soln(self):
-        return self.solve()
-
-    def solve(self):
-        return nonlinsolve(self.sympy_lines, self.syms)
+        dlc_plines = DesmosLinesContainer()
+        try:
+            plines_raw = self.parse2pycode(self.sympy_lines)
+            dlc_plines.lines = self.fix_pycode_line(plines_raw, from_sympy=False)
+        except Exception:
+            logging.warning(traceback.format_exc())
+        finally:
+            return dlc_plines
 
     @staticmethod
     def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy: bool = False):
@@ -293,6 +328,27 @@ class DesmosLatexParser(object):
         """CAUTION: refer to `self.exec_pycode(...)`.
         """
         return self.get_desmos_ns()
+
+    #: default location for user-created model output
+    default_output_dir = D2P_Resources \
+        .get_user_resources_path() \
+        .joinpath('models')
+
+    #: desmos2python output file suffix (executable model python code)
+    d2p_suffix = '.d2p.py'
+    
+    def export_model(self, output_dir: PathLike = None, output_filename: PathLike = None) -> PathLike:
+        """save the desmos model code (executable python code) to disk"""
+        if output_dir is None:
+            output_dir = DesmosLatexParser.default_output_dir
+        if output_filename is None:
+            output_filename = Path(self.fpath) \
+                .with_suffix(DesmosLatexParser.d2p_suffix) \
+                .name
+        output_path = Path(output_dir).joinpath(output_filename)
+        output_path.write_text(self.pycode_string)
+        logging.info(f'...wrote to {output_path}')
+        return output_path
 
     @classmethod
     def parse2sympy(cls, lines):
@@ -506,6 +562,8 @@ def read_latex_lines(fpth, split=True):
     """
     with open(fpth, 'r') as fp:
         lines = json.load(fp)
+    #: ! ignore null values
+    lines = [l for l in lines if l is not None]
     if split is True:
         latex_lines = lines
     elif split is False:
@@ -514,13 +572,23 @@ def read_latex_lines(fpth, split=True):
 
 
 def get_filepath(pattern='*', fext='json', n=1, **kwds):
-    """get a matching filepath from the resources directory"""
-    with importlib.resources.path('resources', 'latex_json') as ldir:
-        fpaths = list(
-            ldir
+    """Get a matching filepath from the resources/latex_json directory.
+
+    search path in order:
+    - $HOME/.desmos2python/latex_json/
+    - $PREFIX/site-packages/desmos2python/resources/latex_json/
+    """
+    fpaths = []
+    for ldir in [ D2P_Resources.get_user_resources_path(),
+                  D2P_Resources.get_package_resources_path(), ]:
+        fpths = list(
+            ldir.joinpath('latex_json') \
             .rglob(f'*{pattern}.{fext}'
                    .replace('**', '*'))
         )
+        fpaths.extend(fpths)
+        if len(fpaths) > 0:
+            break
     if n == 1:
         #: ! ensure at least one path found.
         assert len(fpaths) >= 1

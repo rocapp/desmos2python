@@ -8,6 +8,7 @@ __all__ = [
     'export_graph_and_parse',
 ]
 
+
 def make_latex_parser(fpath, **kwds):
     return DesmosLatexParser(fpath=fpath, **kwds)
 

@@ -1,10 +1,10 @@
 [build-system]
-requires = [ "setuptools>=40.6.0", "setuptools-scm", "wheel>=0.34.2",]
+requires = [ "setuptools>=40.6.0", "setuptools-scm", "wheel>=0.34.2", ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "desmos2python"
-dynamic = ["dependencies","readme","version"]
+dynamic = [ "dependencies", "readme", "version", "entry-points", ]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
 requires-python = ">=3.8.10"
 classifiers = [
@@ -26,7 +26,6 @@ email = "rcapps@teladochealth.com"
 Homepage = "https://github.com/rocapp/desmos2python"
 "Issue Tracker" = "https://github.com/rocapp/desmos2python/issues"
 "Source Code" = "https://github.com/rocapp/desmos2python"
-Documentation = "https://desmos2python.readthedocs.io/en/latest"
 
 [project.license]
 file = "LICENSE"

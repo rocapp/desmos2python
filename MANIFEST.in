@@ -1,16 +1,13 @@
-recursive-include resources *
-recursive-include resources/javascript *.js
-recursive-include resources/templates *.*jinja2
-recursive-include resources/latex_json *.json
 include AUTHORS.rst
 include LICENSE
 include README.md
 include README.rst
-
-recursive-include tests *.py
+include tox.ini
+include *-requirements.txt
+include requirements.txt
+graft tests
 recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
-recursive-exclude * *.*~
+global-exclude *.py[co~]
 exclude .dependabot *
 exclude .devcontainer.json
 exclude .imgbotconfig
@@ -22,6 +19,7 @@ exclude .pylintrc
 exclude .gitignore
 recursive-exclude .github *
 recursive-exclude .dependabot *
-
-recursive-exclude .tox *
-global-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif *.js *.*jinja2
+global-exclude *.*~
+global-exclude *.py~
+recursive-exclude * *.*~
+prune .tox

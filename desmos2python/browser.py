@@ -9,9 +9,14 @@ from functools import cached_property
 import importlib
 import importlib.resources
 import importlib.util
+from desmos2python.utils import D2P_Resources
 from typing import AnyStr
 import json
 from threading import RLock
+
+__all__ = [
+    'DesmosWebSession',
+]
 
 
 class DesmosWebSession(object):
@@ -115,8 +120,10 @@ class DesmosWebSession(object):
 
     @property
     def latex_list(self):
+        #: ! exclude null values
         return [
             expression.get('latex') for expression in self.expressions_list
+            if expression.get('latex') is not None
         ]
     
     @property
@@ -127,15 +134,21 @@ class DesmosWebSession(object):
             '.json'
         return output_filename
 
-    def export_latex2json(self, latex_list=None, output_filename=None, json_dir=None):
+    #: default output directory for downloaded latex (*.json files)
+    default_output_dir = D2P_Resources\
+        .get_user_resources_path()\
+        .joinpath('latex_json')
+    
+    def export_latex2json(self, latex_list=None, output_filename=None, output_dir=None):
         """export latex_list -> output_filename (JSON list)"""
         if latex_list is None:
             latex_list = self.latex_list
         if output_filename is None:
             output_filename = self.output_filename
         if json_dir is None:
-            json_dir = next(importlib.resources.path("resources", "latex_json").gen)
-        outpath = json_dir.joinpath(output_filename)
+            output_dir = DesmosWebSession.default_output_dir
+        outpath = Path(output_dir) \
+            .joinpath(output_filename)
         self.outpath = outpath
         with outpath.open(mode='w') as fp:
             json.dump(latex_list, fp)
@@ -143,8 +156,9 @@ class DesmosWebSession(object):
 
     @staticmethod
     def get_local_js():
+        """deprecated"""
         js_string = \
             importlib.resources.open_text(
-                'resources.javascript',
+                'desmos2python.resources.javascript',
                 'get_latex_desmos.js').read()
         return js_string
