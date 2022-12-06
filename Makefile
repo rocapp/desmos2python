@@ -52,12 +52,12 @@ lint: ## Check code style
 .PHONY: test
 test: ## Run tests quickly with the default Python
 	@echo "+ $@"
-	@tox -e py38
+	@tox -e test
 
 .PHONY: test-all
 test-all: ## Run tests on every Python version with tox
 	@echo "+ $@"
-	@tox -r
+	@tox -r -e test -e qa
 
 .PHONY: build
 build: clean ## Package and upload release
