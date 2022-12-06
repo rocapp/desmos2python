@@ -7,10 +7,6 @@ import re
 import traceback
 from pathlib import Path
 from functools import cached_property
-import importlib
-import importlib.resources
-import importlib.util
-import numpy as np
 import sympy as sp
 from sympy.parsing.latex import parse_latex
 from sympy import pycode
@@ -583,9 +579,9 @@ class SympyPatterns(PatternsMixIn):
     @staticmethod
     def desmos_itemize_repl(m):
         return r'{} = \begin{{\itemize}}'.format(m.group(1)) + \
-            ''.join([f'\item{i}\n' for i in
+            ''.join([r'\item{}\n'.format(i) for i in
                      range(int(m.group(2)), 1+int(m.group(3)))]) +\
-            '\end{{\itemize}}'
+            r'\end{{\itemize}}'
 
 
 def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):

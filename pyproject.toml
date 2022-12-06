@@ -34,8 +34,6 @@ file = "LICENSE"
 [tool.setuptools_scm]
 write_to = "desmos2python/_version.py"
 local_scheme = "no-local-version"
-version_scheme = "python-simplified-version"
-git_describe_command = "git describe --tags"
 
 [tool.setuptools]
 zip-safe = false
