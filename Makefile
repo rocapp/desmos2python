@@ -65,12 +65,12 @@ build: clean ## Package release
 	@tox -r -e prebuild -e build
 
 .PHONY: release-pypi
-release: build ## Package and upload release to pypi
+release-pypi: build ## Package and upload release to pypi
 	@echo "+ $@"
 	@/bin/bash -c 'twine upload dist/*'
 
 .PHONY: release-github
-release: build ## Package and upload release to github
+release-github: build ## Package and upload release to github
 	@echo "+ $@"
 	@/bin/bash -c 'gh release create'
 

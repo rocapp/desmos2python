@@ -1,17 +1,29 @@
 desmos2python
 =============
 
-seamless conversion between Desmos LaTeX equations & executable Python
-code.
+convert Desmos equations to executable Python code
+
+Links
+-----
+
+-  `desmos2python (PyPI) <https://pypi.org/project/desmos2python/>`__
+-  `Desmos Graphing Caculator <https://desmos.com/calculator>`__
 
 Notes
 -----
 
-Currently known to be compatible with ``python3.8`` (working on
-expanding compatibility)
+Compatibility
+~~~~~~~~~~~~~
 
-Definitely recommend using a virtual environment, e.g. via docker or
-conda.
+-  ``python3.8``
+
+NOTE: *working on expanding compatibility…*
+
+Helpful tips
+~~~~~~~~~~~~
+
+*…definitely recommend using a virtual environment, e.g. via docker or
+conda.*
 
 Install
 -------
