@@ -13,7 +13,7 @@ def convert2rst():
     # see the documentation how to customize the installation path
     # but be aware that you then need to include it in the `PATH`
     download_pandoc()
-    os.system('sudo apt install -qqy ./$(ls pandoc*.deb|head -1)')
+    os.system('dpkg -x ./$(ls pandoc*.deb|head -1) pandoc_bin')
     #: convert -> rst
     os.system('pandoc -s README.md -t rst -o README.rst~')
     with open('README.rst~', 'r') as f:

@@ -89,3 +89,4 @@ _version.py
 *.deb
 *~
 .local-bashrc
+pandoc_bin/
