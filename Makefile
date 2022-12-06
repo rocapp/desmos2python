@@ -55,7 +55,7 @@ test: ## Run tests quickly with the default Python
 	@tox -n test
 
 .PHONY: test-all
-test-all: ## Run tests on every Python version with tox
+test-all: clean-build clean-tox ## Run tests on every Python version with tox
 	@echo "+ $@"
 	@tox -r -n test -n qa
 

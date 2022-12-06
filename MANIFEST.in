@@ -1,18 +1,14 @@
+global-include *.py
 include AUTHORS.rst
 include LICENSE
 include README.md
 include README.rst
 include tox.ini
 include MANIFEST.in
-include pyproject.toml
-include setup.py
 include *.txt
-include *.py
-global-include *.py
-recursive-include * *.py
+recursive-include desmos2python *.py
 recursive-include requirements *.txt
 recursive-exclude * __pycache__
-global-exclude *.py[co]
 exclude .dependabot *
 exclude .devcontainer.json
 exclude .imgbotconfig
@@ -25,4 +21,4 @@ exclude .gitignore
 recursive-exclude .github *
 recursive-exclude .dependabot *
 global-exclude *.*~
-recursive-exclude * *.*~
+recursive-exclude .tox *
