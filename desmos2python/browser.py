@@ -7,9 +7,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common import JavascriptException
 from functools import cached_property
 from pathlib import Path
-import importlib
-import importlib.resources
-import importlib.util
 from desmos2python.utils import D2P_Resources
 from typing import AnyStr
 import json
@@ -18,6 +15,42 @@ from threading import RLock
 __all__ = [
     'DesmosWebSession',
 ]
+
+
+class DesmosCalcStrings:
+
+    getExpressions: str = '''
+    var exprs = Calc.getExpressions();
+    return exprs.filter(el => (el.latex && el.lineStyle && !el.hidden));
+    '''
+
+    getState = 'return Calc.getState()'
+
+    expressionAnalysis = \
+        '''
+        var analysis_results = {};
+        Calc.observe('expressionAnalysis', () => {
+        for (var id in Calc.expressionAnalysis) {
+        analysis_results[id] = Calc.expressionAnalysis[id];
+        });
+        return JSON.stringify(analysis_results)
+        '''
+    
+    def __init__(self):
+        pass
+
+    @property
+    def take_svg_screenshot(self):
+        return self.get_local_js(filename='take_svg_screenshot.js')
+
+    def get_local_js(self, filename='take_svg_screenshot.js'):
+        """load a javascript command from the resources directory"""
+        js_path = D2P_Resources \
+            .get_package_resources_path() \
+            .joinpath("javascript", filename)
+        js_string = js_path.read_text()
+        return js_string
+
 
 
 class DesmosWebSession(object):
@@ -32,7 +65,6 @@ class DesmosWebSession(object):
         self._user_title = title
         self.url = self.format_url(url)
         self.outpath = None
-        self.js_string = 'return Calc.getExpressions()'
         self.browser = None
         self.init_browser()
         self.lock = RLock()
@@ -56,7 +88,7 @@ class DesmosWebSession(object):
         ref: https://www.selenium.dev/documentation/webdriver/waits/
         """
         try:
-            _ = self.browser.execute_script(self.js_string)
+            _ = self.browser.execute_script(DesmosCalcStrings.getExpressions)
         except JavascriptException:
             return False
         else:
@@ -102,11 +134,25 @@ class DesmosWebSession(object):
         (defaults to loading Calc.getExpressions())
         """
         if js_string is None:
-            js_string = self.js_string
+            js_string = DesmosCalcStrings.getExpressions
         if self.url != self.current_url:
             self.goto_url(self.url)
         out = self.browser.execute_script(js_string)
         return out
+
+    def take_svg_screenshot(self):
+        """take a screenshot, return svg string."""
+        self.goto_url(url=self.url)
+        sshot = self.execute_js(
+            js_string=DesmosCalcStrings().take_svg_screenshot
+        )
+        return sshot
+
+    def getState(self):
+        """get the calculator state for the current url (self.url)"""
+        self.goto_url(url=self.url)
+        calc_state = self.execute_js(js_string=DesmosCalcStrings.getState)
+        return calc_state
 
     def get_expressions_from_url(self, url=None):
         """navigate to the given url, return list of JSON"""
@@ -135,10 +181,9 @@ class DesmosWebSession(object):
             '.json'
         return output_filename
 
-    #: default output directory for downloaded latex (*.json files)
+    #: default output directory for exports
     default_output_dir = D2P_Resources\
-        .get_user_resources_path()\
-        .joinpath('latex_json')
+        .get_user_resources_path()
 
     def export_latex2json(self, latex_list=None, output_filename=None,
                           output_dir=None):
@@ -148,7 +193,9 @@ class DesmosWebSession(object):
         if output_filename is None:
             output_filename = self.output_filename
         if output_dir is None:
-            output_dir = DesmosWebSession.default_output_dir
+            output_dir = DesmosWebSession \
+                .default_output_dir \
+                .joinpath('latex_json')
         outpath = Path(output_dir) \
             .joinpath(output_filename)
         self.outpath = outpath
@@ -156,11 +203,37 @@ class DesmosWebSession(object):
             json.dump(latex_list, fp)
         return outpath
 
-    @staticmethod
-    def get_local_js():
-        """deprecated"""
-        js_string = \
-            importlib.resources.open_text(
-                'desmos2python.resources.javascript',
-                'get_latex_desmos.js').read()
-        return js_string
+    def export_calcState(self, calc_state=None, output_filename=None,
+                         output_dir=None):
+        """export calculator state"""
+        if calc_state is None:
+            calc_state = self.getState()
+        if isinstance(calc_state, str):
+            calc_state = json.loads(calc_state)
+        if output_filename is None:
+            output_filename = self.output_filename
+        if output_dir is None:
+            output_dir = DesmosWebSession \
+                .default_output_dir \
+                .joinpath('calcState_json')
+        outpath = Path(output_dir) \
+            .joinpath(output_filename) \
+            .with_suffix('.json')
+        with outpath.open(mode='w') as fp:
+            json.dump(calc_state, fp)
+        return outpath
+
+    @property
+    def svg_screenshot(self):
+        return self.take_svg_screenshot()
+
+    def export_svgScreenshot(self):
+        """save svg screenshot (graph) -> .svg"""
+        output_dir = \
+            Path(DesmosWebSession.default_output_dir) \
+            .joinpath('screenshots')
+        output_path = output_dir \
+            .joinpath(self.output_filename) \
+            .with_suffix('.svg')
+        output_path.write_text(self.svg_screenshot)
+        return output_path

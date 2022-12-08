@@ -5,7 +5,12 @@ from desmos2python.utils import D2P_Resources
 
 __all__ = [
     'init_resources_d2p',
+    'd2p_subdirs',
 ]
+
+
+#: sub-directories to be created
+d2p_subdirs = ['calcState_json', 'latex_json', 'templates', 'models', 'screenshots']
 
 
 class init_resources_d2p(Command):
@@ -23,12 +28,12 @@ class init_resources_d2p(Command):
     def _init_user_resources(self):
         user_path = D2P_Resources.get_user_resources_path()
         if not user_path.exists():
-            user_path.mkdir()
+            user_path.mkdir()   # ! don't overwrite if path already exists
             assert user_path.resolve().exists() is True
-            for subdir in ['latex_json', 'templates', 'models']:
+            for subdir in d2p_subdirs:
                 subdir_path = user_path \
                     .joinpath(subdir)
-                subdir_path.mkdir()
+                subdir_path.mkdir()  # ! don't overwrite if path already exists
                 assert subdir_path.resolve().exists() is True
 
     def _link_pkg_resources(self):

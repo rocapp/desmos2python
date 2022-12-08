@@ -20,3 +20,4 @@ dependencies:
   - selenium
   - geckodriver
   - pypandoc
+  - svg.path
