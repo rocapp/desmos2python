@@ -629,8 +629,8 @@ def read_latex_lines(fpth, split=True):
     """
     with open(fpth, 'r') as fp:
         lines = json.load(fp)
-    #: ! ignore null values
-    lines = [l for l in lines if l is not None]
+    #: ! ignore null values, fix backslash escape patterns
+    lines = [l.replace(r'\\', "\\") for l in lines if l not in [None, '']]
     if split is True:
         latex_lines = lines
     elif split is False:
