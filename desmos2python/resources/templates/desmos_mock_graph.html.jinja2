@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://www.desmos.com/api/v1.7/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+    </head>
+    <body>
+	<div id="calculator" style="width: 500px; height: 300px; margin: 0 auto 10px;"></div>
+	
+	<div style="margin-top: 10px; width: 100%; overflow: hidden;">
+	    <div style="width: 75%; float: left;">
+		<span id="svg-span"></span>
+	    </div>
+	</div>
+	
+	<script>
+	 
+	 var elt = document.getElementById('calculator');
+	 var Calc = Desmos.GraphingCalculator(elt);
+	 
+	 function mapExpressionsInit() {
+	     let expr = Calc
+		 .getExpressions()
+		 .filter((el) => { return el.type == 'expression'; });
+	     let new_expr = [];
+	     expr.forEach((el) => {
+		 el.label = `${el.type}-${el.color}-${el.id}`
+		 new_expr.push(el);
+	     });
+	     Calc.setExpressions(new_expr);
+	 }
+	 
+	 var opts = {
+	     format: 'svg',
+	     mode: 'contain',
+	     width: 300,
+	     height: 500,
+	     showLabels: false,
+	     targetPixelRatio: 2
+	 };
+
+	 function takeScreenshot() {
+	     Calc.asyncScreenshot(opts, function(data) {
+		 let svg_span = document.getElementById("svg-span");
+		 svg_span.innerHTML = data;
+	     });
+	 }
+
+	 function init_calc() {
+	     Calc.setState({{ calc_state_json|tojson|safe }});
+	     mapExpressionsInit();
+	     takeScreenshot();
+	 }
+
+	 var traces = null;
+	 window.addEventListener('load', (evt) => {
+	     init_calc();
+	     setTimeout(() => {
+		 // find the matching expressions <-> traces
+		 // get all traces corresponding to expressions
+		 let svg_children = document
+		     .querySelector('span#svg-span')
+		     .querySelector('svg')
+		     .querySelector('[id^=expressions-]')
+		     .children;
+		 let earr = [...svg_children];
+		 // map corresponding titles -> element.id = title-text...
+		 traces = Array.from(earr, (el) => {
+		     el.id = el.querySelector('title').textContent;
+		     return el;
+		 });
+		 let exprs = [...Calc.getExpressions()];
+		 // finalTraces : { "id": ..., "latex": ..., "label": ..., "trace": <path> }
+		 finalTraces = Array.from(traces, (trace) => {
+		     let el_match = exprs.find((el) => { return el.label === trace.id });
+		     el_match.trace = trace.querySelector('path.dcg-svg-curve');
+		     return el_match
+		 });
+	     }, 6000);
+	 });
+
+	</script>
+
+    </body>
+</html>

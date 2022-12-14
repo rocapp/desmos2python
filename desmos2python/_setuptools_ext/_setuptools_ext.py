@@ -10,7 +10,9 @@ __all__ = [
 
 
 #: sub-directories to be created
-d2p_subdirs = ['calcState_json', 'latex_json', 'templates', 'models', 'screenshots']
+d2p_subdirs = ['calcState_json',
+               'latex_json', 'latex_tex',
+               'templates', 'models', 'screenshots']
 
 
 class init_resources_d2p(Command):
@@ -30,11 +32,13 @@ class init_resources_d2p(Command):
         if not user_path.exists():
             user_path.mkdir()   # ! don't overwrite if path already exists
             assert user_path.resolve().exists() is True
-            for subdir in d2p_subdirs:
-                subdir_path = user_path \
-                    .joinpath(subdir)
+        for subdir in d2p_subdirs:
+            subdir_path = user_path \
+                .joinpath(subdir)
+            if not subdir_path.exists():
                 subdir_path.mkdir()  # ! don't overwrite if path already exists
-                assert subdir_path.resolve().exists() is True
+            assert subdir_path.resolve().exists() is True
+        return True
 
     def _link_pkg_resources(self):
         pkg_path = D2P_Resources.get_package_resources_path()

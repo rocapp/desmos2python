@@ -11,11 +11,11 @@ def get_rootpath(startpath=__file__):
 
 
 #: top-level root path
-rootpath = get_rootpath()
+rootpath = str(get_rootpath())
 
 #: insert to sys.path if needed.
 if rootpath not in sys.path:
-    sys.path.insert(0, rootpath)
+    sys.path.append(rootpath)
 
 #: d2p api-level imports
 import desmos2python.utils
@@ -36,9 +36,17 @@ except ModuleNotFoundError:
 try:
     import desmos2python.api as api
     from desmos2python.api import (
-        make_latex_parser, make_web_session,
+        make_latex_parser,
+        make_web_session,
+        make_svg_parser,
         export_graph_and_parse,
     )
+except ModuleNotFoundError:
+    logging.warning(traceback.format_exc())
+
+try:
+    import desmos2python.render as render
+    from desmos2python.render import make_web_session_with_state
 except ModuleNotFoundError:
     logging.warning(traceback.format_exc())
 
@@ -50,5 +58,7 @@ __all__ = [
     'DesmosWebSession',
     'make_latex_parser',
     'make_web_session',
+    'make_svg_parser',
     'export_graph_and_parse',
+    'make_web_session_with_state',
 ]

@@ -43,6 +43,10 @@ class DesmosCalcStrings:
     def take_svg_screenshot(self):
         return self.get_local_js(filename='take_svg_screenshot.js')
 
+    @property
+    def get_svg(self):
+        return self.get_local_js(filename='get_svg.js')
+
     def get_local_js(self, filename='take_svg_screenshot.js'):
         """load a javascript command from the resources directory"""
         js_path = D2P_Resources \
@@ -50,7 +54,6 @@ class DesmosCalcStrings:
             .joinpath("javascript", filename)
         js_string = js_path.read_text()
         return js_string
-
 
 
 class DesmosWebSession(object):
@@ -61,15 +64,17 @@ class DesmosWebSession(object):
 
     desmos_url_head = 'https://www.desmos.com/calculator/'
 
-    def __init__(self, url='8tb0onyoep', title: AnyStr = None):
+    def __init__(self, url='8tb0onyoep', title: AnyStr = None, auto_format_url=False):
         self._user_title = title
-        self.url = self.format_url(url)
+        self.url = self.format_url(url, auto_format_url=auto_format_url)
         self.outpath = None
         self.browser = None
         self.init_browser()
         self.lock = RLock()
 
-    def format_url(self, url):
+    def format_url(self, url, auto_format_url=False):
+        if auto_format_url is False:
+            return url
         if DesmosWebSession.desmos_url_head not in url:
             url = f'{DesmosWebSession.desmos_url_head}{url}'
         return url
@@ -81,6 +86,7 @@ class DesmosWebSession(object):
         fireFoxOptions.headless = True
         browser = webdriver.Firefox(options=fireFoxOptions)
         self.browser = browser
+        self.goto_url(self.url)
 
     def check_document_initialised(self):
         """Confirm document is initialized (useful for awaiting page load).
@@ -88,7 +94,7 @@ class DesmosWebSession(object):
         ref: https://www.selenium.dev/documentation/webdriver/waits/
         """
         try:
-            _ = self.browser.execute_script(DesmosCalcStrings.getExpressions)
+            _ = self.browser.execute_script(DesmosCalcStrings().take_svg_screenshot)
         except JavascriptException:
             return False
         else:
@@ -140,8 +146,11 @@ class DesmosWebSession(object):
         out = self.browser.execute_script(js_string)
         return out
 
-    def take_svg_screenshot(self):
-        """take a screenshot, return svg string."""
+    def take_svg_screenshot(self, reset_cached=False):
+        """take a screenshot, return svg object (selenium)."""
+        #: first, take the screenshot...
+        if reset_cached is True:
+            delattr(self, 'svg_screenshot')
         self.goto_url(url=self.url)
         sshot = self.execute_js(
             js_string=DesmosCalcStrings().take_svg_screenshot
@@ -177,31 +186,50 @@ class DesmosWebSession(object):
     def output_filename(self):
         output_filename = self.title.replace(' ', '_')
         output_filename = \
-            ''.join([a for a in output_filename if a.isalnum()]) + \
-            '.json'
+            ''.join([a for a in output_filename if a.isalnum()])
         return output_filename
 
     #: default output directory for exports
     default_output_dir = D2P_Resources\
         .get_user_resources_path()
 
-    def export_latex2json(self, latex_list=None, output_filename=None,
-                          output_dir=None):
-        """export latex_list -> output_filename (JSON list)"""
+    def export_latex2json(self, latex_list=None, output_filename=None):
+        return self.export_latex(latex_list=latex_list,
+                                 output_filename=output_filename,
+                                 suffix='json')
+
+    def export_latex2tex(self, latex_list=None, output_filename=None):
+        return self.export_latex(latex_list=latex_list,
+                                 output_filename=output_filename,
+                                 output_dir='latex_tex',
+                                 suffix='tex')
+
+    def export_latex(self, latex_list=None, output_filename=None,
+                     output_dir='latex_json', suffix='json'):
+        """export latex_list -> output_filename"""
         if latex_list is None:
             latex_list = self.latex_list
         if output_filename is None:
             output_filename = self.output_filename
         if output_dir is None:
-            output_dir = DesmosWebSession \
-                .default_output_dir \
-                .joinpath('latex_json')
-        outpath = Path(output_dir) \
-            .joinpath(output_filename)
+            output_dir = 'latex_json'
+        #: ! ensure suffix has '.' as first element
+        suffix = '.' + suffix if suffix[0] != '.' else suffix
+        outpath = self.default_output_dir \
+            .joinpath(output_dir, output_filename) \
+            .with_suffix(suffix)
         self.outpath = outpath
-        with outpath.open(mode='w') as fp:
-            json.dump(latex_list, fp)
-        return outpath
+        #: select & execute appropriate output procedure...
+        output_funcs = {
+            'json': lambda olst, opth: json.dump(
+                olst, outpath.open(mode='w')
+            ),
+            'tex': lambda olst, opth: Path(opth).write_text(
+                '\n'.join([f'${ol}$' for ol in olst])
+            ),
+        }
+        output_funcs[suffix.replace('.', '')](latex_list, self.outpath)
+        return self.outpath
 
     def export_calcState(self, calc_state=None, output_filename=None,
                          output_dir=None):
@@ -223,17 +251,19 @@ class DesmosWebSession(object):
             json.dump(calc_state, fp)
         return outpath
 
-    @property
+    @cached_property
     def svg_screenshot(self):
-        return self.take_svg_screenshot()
+        """return the svg screenshot source as a string"""
+        svg = self.take_svg_screenshot()
+        return svg
 
     def export_svgScreenshot(self):
         """save svg screenshot (graph) -> .svg"""
-        output_dir = \
-            Path(DesmosWebSession.default_output_dir) \
-            .joinpath('screenshots')
-        output_path = output_dir \
-            .joinpath(self.output_filename) \
+        svg_src = self.svg_screenshot
+        outfn = self.output_filename
+        output_path = \
+            DesmosWebSession.default_output_dir \
+            .joinpath('screenshots', outfn) \
             .with_suffix('.svg')
-        output_path.write_text(self.svg_screenshot)
+        output_path.write_text(svg_src)
         return output_path

@@ -1,7 +1,1 @@
-var svg = {};
-Calc.asyncScreenshot(
-    { format: 'svg'},
-    (data) => {
-	svg = data; return data;
-    });
-return svg;
+return document.querySelector('span#svg-span').querySelector('svg');

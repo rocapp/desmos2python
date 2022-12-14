@@ -1,12 +1,18 @@
 """desmos2python.api: high-level API access, helper methods."""
 from desmos2python.latex import DesmosLatexParser
 from desmos2python.browser import DesmosWebSession
+from desmos2python.svg import DesmosSVGParser
 
 __all__ = [
     'make_latex_parser',
     'make_web_session',
+    'make_svg_parser',
     'export_graph_and_parse',
 ]
+
+
+def make_svg_parser(filename, auto_init=True):
+    return DesmosSVGParser(filename=filename, auto_init=auto_init)
 
 
 def make_latex_parser(fpath, **kwds):

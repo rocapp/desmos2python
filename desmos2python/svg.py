@@ -43,12 +43,30 @@ class DesmosSVGParser:
     @cached_property
     def resources_path(self):
         return D2P_Resources.get_package_resources_path()
+
+    @cached_property
+    def user_path(self):
+        return D2P_Resources.get_user_resources_path()
     
     def __init__(self, filename='ex.svg', auto_init=True):
-        self.fpath = self.resources_path.joinpath(filename)
+        self.fpath = self._setup_fpath(filename)
         self.doc = None
         if auto_init is True:
             self.init_doc()
+
+    def _setup_fpath(self, filename):
+        paths = [
+            self.resources_path.joinpath("screenshots", filename),
+            self.user_path.joinpath("screenshots", filename),
+        ]
+        for path in paths:
+            if path.exists():
+                return path
+            matching = path.parent.rglob(f'*{filename}*' \
+                                         .replace('**', '*'))
+            for match in matching:
+                return match
+        raise RuntimeError('no matching filename found in ~/.desmos2python/screenshots.')
 
     def init_doc(self):
         self.doc = minidom.parse(self.fpath.__str__())

@@ -23,6 +23,12 @@ class TestDesmosWebSession(unittest.TestCase):
         self.assertEqual(True, len(ll) > 0)
         dws.export_latex2json()
 
+    def testSVG(self):
+        from desmos2python import DesmosWebSession
+        dws = DemosWebSession(url='https://www.desmos.com/calculator/t68sf7nwdo')
+        pth = dws.export_svgScreenshot()
+        self.assertTrue(len(pth.read_text()) > 0)
+
 
 class TestDesmos2Python(unittest.TestCase):
     def setUp(self):
