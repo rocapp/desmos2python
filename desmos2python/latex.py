@@ -235,7 +235,7 @@ class DesmosLatexParser:
         dlc_plines = DesmosLinesContainer()
         try:
             # ! use pandoc instead of sympy here
-            plines_raw = self.parse2pycode(self.plain_lines)
+            plines_raw = self.plain_lines
             dlc_plines.lines = DesmosLatexParser.fix_pycode_line(
                 plines_raw, from_sympy=False)
         except Exception:
