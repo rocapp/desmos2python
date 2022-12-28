@@ -98,12 +98,14 @@ class DesmosLatexParser:
 
     """Helper class for parsing Desmos LaTeX equations.
     """
+    
+    __mro__ = (object, )
 
     def _ipython_key_completions_(self):
         return []
 
     def __init__(self, expr_str: AnyStr = None, lines: List[AnyStr] = None,
-                 fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = True,
+                 fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = False,
                  ns_prefix: AnyStr = '', ns_name: AnyStr = 'DesmosModelNS', **kwds):
         """
         Keyword Arguments:
@@ -228,7 +230,8 @@ class DesmosLatexParser:
     @cached_property
     def plain_lines(self):
         """converted from latex -> 'plain' math format via pandoc"""
-        return [pdoc_convert2plain(line) for line in self.latex_lines]
+        return DesmosLinesContainer(
+            lines=[pdoc_convert2plain(line) for line in self.latex_lines])
 
     @cached_property
     def pycode_lines(self):
@@ -244,7 +247,8 @@ class DesmosLatexParser:
             return dlc_plines
 
     @staticmethod
-    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr], from_sympy: bool = False, verbosity=logging.ERROR):
+    def fix_pycode_line(pline: Union[List[AnyStr], AnyStr],
+        from_sympy: bool = False, verbosity=logging.ERROR):
         """fix a line after `sympy.pycode(line)`.
 
         >>> line = '  # Not supported in Python:\\n  # E\\n(E(x) == 1/(1 + math.exp(-2*x)))'
@@ -283,11 +287,10 @@ class DesmosLatexParser:
             except Exception:
                 #: ! on failure, log (line, error_msg) to `self._errs`
                 msg = traceback.format_exc()
-                logging.warning(msg)
-                if isinstance(cls, DesmosLatexParser):
-                    cls._errs.append((sline, msg))
-            else:
+                logging.debug(msg)
                 pline = str(sline)
+                if isinstance(cls, DesmosLatexParser):
+                    cls._errs.append((pline, msg))
             finally:
                 pcode_lines.append(pline)
         return pcode_lines
@@ -314,6 +317,7 @@ class DesmosLatexParser:
     def calc_pycode_environment(self):
         """setup variables for jinja2 environment"""
         lines_fixed = [fix_raw_pycode(pline) for pline in self.pycode_lines]
+        lines_fixed = [line for line in lines_fixed if line is not None]
         params_fixed = list(
             filter(lambda line: line.get('param_name') != '', lines_fixed))
         params_fixed = sorted(
@@ -510,8 +514,12 @@ def _\1(self, \2):
         > cls.find_args('def fun(x,y,z):'
         ['x', 'y', 'z']
         """
-        return cls.main_line_pattern.findall(string)[0][1]. \
-            replace(' ', '').split(',')
+        found = cls.main_line_pattern.findall(string)
+        if len(found) == 0:
+            return []
+        if len(found[0]) > 1:
+            return found[0][1].replace(' ', '').split(',')
+        return []
             
     @classmethod
     def get_pycode_return_value(cls, string):
@@ -615,7 +623,7 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     pycode_fixed = \
         re.subn(pattern=PycodePatterns.fix_mismatch_pattern,
                 repl=PycodePatterns.fix_mismatch_repl,
-                string=pycode_fixed)
+                string=pycode_fixed)[0]
     #: ! fix any instance attributes contained in the return line: (self....)
     pycode_fixed = PycodePatterns.fix_pycode_instance_attrs(pycode_fixed)
     if retfull is False:
