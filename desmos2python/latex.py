@@ -15,6 +15,8 @@ from typing import AnyStr, List, Dict, Union, Container
 from desmos2python._logger import LoggingContext
 from desmos2python.consts import GlobalConsts
 from desmos2python.utils import flatten, D2P_Resources
+from desmos2python.resources.greek_chars import GreekAlphabet
+from desmos2python.pdoc import convert2plain as pdoc_convert2plain
 import builtins
 
 __all__ = [
@@ -224,10 +226,16 @@ class DesmosLatexParser:
             return slines
 
     @cached_property
+    def plain_lines(self):
+        """converted from latex -> 'plain' math format via pandoc"""
+        return [pdoc_convert2plain(line) for line in self.latex_lines]
+
+    @cached_property
     def pycode_lines(self):
         dlc_plines = DesmosLinesContainer()
         try:
-            plines_raw = self.parse2pycode(self.sympy_lines)
+            # ! use pandoc instead of sympy here
+            plines_raw = self.parse2pycode(self.plain_lines)
             dlc_plines.lines = DesmosLatexParser.fix_pycode_line(
                 plines_raw, from_sympy=False)
         except Exception:
@@ -278,8 +286,9 @@ class DesmosLatexParser:
                 logging.warning(msg)
                 if isinstance(cls, DesmosLatexParser):
                     cls._errs.append((sline, msg))
-                pcode_lines.append(sline)
             else:
+                pline = str(sline)
+            finally:
                 pcode_lines.append(pline)
         return pcode_lines
 
@@ -304,7 +313,7 @@ class DesmosLatexParser:
 
     def calc_pycode_environment(self):
         """setup variables for jinja2 environment"""
-        lines_fixed = self.fix_pycode_lines()
+        lines_fixed = [fix_raw_pycode(pline) for pline in self.pycode_lines]
         params_fixed = list(
             filter(lambda line: line.get('param_name') != '', lines_fixed))
         params_fixed = sorted(
@@ -337,7 +346,7 @@ class DesmosLatexParser:
 
     @cached_property
     def template(self):
-        template = self.env.get_template('desmos_model_ns.pyjinja2')
+        template = self.env.get_template('desmos_model_ns.jinja2')
         return template
 
     @cached_property
@@ -417,8 +426,37 @@ class PatternsMixIn:
 
     """helper methods for regex patterns"""
     
+    @property
+    def patterns(self):
+        attrs = dict(vars(self.__class__))
+        patterns = sorted(list(filter(lambda a: '_pattern' in a, attrs)))
+        return patterns
+
+    @property
+    def repls(self):
+        attrs = dict(vars(self.__class__))
+        repls = sorted(list(filter(lambda a: '_repl' in a, attrs)))
+        return repls
+
+    def __str__(self):
+        """wrapper to include a list of (pattern, replacement) pairs"""
+        pstr = '\t' + \
+        '\n\t'.join([f'{r}  :  {p}' for r, p in zip(self.patterns, self.repls)])
+        return f'''{self.__class__.__name__}:\npstr'''
+
     @classmethod
-    def subn(cls, string, key='desmos_list', repl_key=None, custom_repl=None):
+    def subn(cls, string, key, repl_key=None, custom_repl=None):
+        """wrapper for the builtin `re.subn(...)` method.
+        
+        Signature
+        ---------
+        subn(cls, string, key, repl_key=None, custom_repl=None):
+        
+        Arguments
+        ---------
+        string : the string to be matched on
+        key : prefix of the pattern/replacement... e.g., `subscript_`
+        """
         if repl_key is None:
             repl_key = key
         p = getattr(cls, f'{key}_pattern')
@@ -433,6 +471,10 @@ class PycodePatterns(PatternsMixIn):
 
     """Pre-compiled regex patterns for `fix_raw_pycode(...)`.
     """
+    
+    #: easy replacement for ^ -> ** for pycode math exponents
+    expo_pattern = re.compile(r'\^')
+    expo_repl = r'**'
 
     #: identify subscripts pattern
     subscript_pattern = re.compile(r'_\{([a-zA-Z0-9]+)\}')
@@ -444,7 +486,7 @@ class PycodePatterns(PatternsMixIn):
 
     #: ! main template pattern
     main_line_pattern = re.compile(
-        r'([a-zA-Z_])\(([a-zA-Z_,\s][a-zA-Z_0-9,\s]*)\)\s=')
+        r'([a-zA-Z_]+)\(([a-zA-Z_,\s][a-zA-Z_0-9,\s]*)\)=', re.UNICODE)
     main_line_repl: AnyStr = \
         r'''
 def _\1(self, \2):
@@ -453,6 +495,41 @@ def _\1(self, \2):
     #: mismatched parentheses
     fix_mismatch_pattern = re.compile(r'(\(+.*(?![)\)]))', flags=re.DOTALL)
     fix_mismatch_repl: AnyStr = r'\1'
+    
+    #: comma spacing
+    comma_pattern = r'(\,(?!\W))'
+    comma_repl = r'\1 '
+    
+    @classmethod
+    def find_args(cls, string):
+        """Find and return a list of any comma-separated arguments.
+        
+        Examples
+        --------
+        # ...e.g. from a pycode/math function:
+        > cls.find_args('def fun(x,y,z):'
+        ['x', 'y', 'z']
+        """
+        return cls.main_line_pattern.findall(string)[0][1]. \
+            replace(' ', '').split(',')
+            
+    @classmethod
+    def get_pycode_return_value(cls, string):
+        """Get the return values of a pycode method"""
+        return string.partition('return')[2]
+        
+    @classmethod
+    def fix_pycode_instance_attrs(cls, string):
+        """For a pycode method string, prefix any pycode instance attributes with `self.`.
+        
+        ...instance attributes are distinguished from local variables by the method signature.
+        """
+        local_vars = cls.find_args(string)
+        def _repl_inst_attrs(m, local_vars=local_vars):
+            return f'self.{m.group(0)}' if m.group(0) not in local_vars else m.group(0)
+        prefix, sepstr, retstr = string.partition('return')
+        new_retstr = re.sub(string=retstr, pattern='([a-zA-Z_]+)', repl=_repl_inst_attrs)
+        return prefix + sepstr + new_retstr
 
 
 def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> Dict:
@@ -477,19 +554,20 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     #: lines -> line (! handle list of strings)
     if not isinstance(line, str):
         lines = list(line)
-        outlines = list(filter(lambda l: l is not None, [fix_raw_pycode(ll, retfull=retfull) for ll in lines]))
+        outlines = list(filter(
+            lambda l: l is not None,
+            [fix_raw_pycode(ll, retfull=retfull) for ll in lines]))
         return outlines
+    #: Pre-conversion formatting...
     #: keep original line (! in preparation for `retfull`)
     line0 = str(line)
     #: ! Handle double-equals, leading and following parentheses...
     line = str(line).replace(') == ', ') = ')
     line = line.lstrip('(')[:-1]  # remove first and last parentheses
     line = line.replace('cdot ', 'cdot')  # remove extra spaces for cdot
-    #: ! Handle '{', '}' -- namely for subscripted variables/functions
-    try:
-        line = PycodePatterns.subn(PycodePatterns.subn(line, key='subscript_grouped')[0], key='subscript')[0]
-    except IndexError:
-        pass
+    #: formatting regex...
+    for fmt_key in ['expo', 'subscript_grouped', 'subscript', 'comma', ]:
+        line = PycodePatterns.subn(line, key=fmt_key)[0]
     #: ! convert to actual python (numpy) syntax -- ready for `DesmosLatexParser.DesmosModelNS`
     pycode_fixed = re.sub(pattern=PycodePatterns.main_line_pattern,
                           repl=PycodePatterns.main_line_repl,
@@ -534,13 +612,12 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
         func_vectorized = \
             f'{func_name} = np.vectorize(self._{func_name}, cache=True, excluded="self")'
     #: ! final fix of any mismatched parentheses
-    tmp_result = \
+    pycode_fixed = \
         re.subn(pattern=PycodePatterns.fix_mismatch_pattern,
                 repl=PycodePatterns.fix_mismatch_repl,
                 string=pycode_fixed)
-    if tmp_result is not None:
-        if tmp_result[1] > 0:
-            pycode_fixed = tmp_result[0]
+    #: ! fix any instance attributes contained in the return line: (self....)
+    pycode_fixed = PycodePatterns.fix_pycode_instance_attrs(pycode_fixed)
     if retfull is False:
         return pycode_fixed
     return {
@@ -600,19 +677,16 @@ def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
     while True:
         line = latex_queue.get_nowait()
         matches = PycodePatterns.subn(line, key='subscript_grouped')
-        if matches is not None and matches[1] > 0:
-            line = matches[0]
+        line = matches[0]
         try:
-            out = parse_latex(line) \
-                .subs('pi', GlobalConsts.M_PI)
+            out = parse_latex(pdoc_convert2plain(line))
         except Exception:
             with LoggingContext(logger, level=verbosity) as log_ctx:
                 logging.warning(traceback.format_exc())
             #: ! replace desmos-style lists with latex lists
             line_repl = SympyPatterns.subn(line, key='desmos_list')
-            if line_repl[1] > 0 and line_repl[0] is not None:
-                line = line_repl[0]
-                out_list.append(line)
+            line = line_repl[0]
+            out_list.append(line)
         else:
             out_list.append(out)
         finally:
@@ -672,3 +746,4 @@ def run_demo(**kwds):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
