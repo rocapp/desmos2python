@@ -1,7 +1,7 @@
 # Configuration for 'repo_helper' (https://github.com/repo-helper/repo_helper)
 ---
 modname: 'desmos2python'
-version: '0.2.4'
+version: '0.2.5'
 copyright_years: '2022'
 author: 'Robert Ahlroth Capps'
 email: 'rcapps@teladochealth.com'
