@@ -1,3 +1,5 @@
+wheel
+tox
 twine
 build[virtualenv]>=0.3.1
 setuptools-scm

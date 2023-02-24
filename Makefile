@@ -59,10 +59,15 @@ test-all: clean-build clean-tox ## Run tests on every Python version with tox
 	@echo "+ $@"
 	@tox -r -n test -n qa
 
-.PHONY: build
-build: clean ## Package release
+.PHONY: prebuild
+prebuild: clean
 	@echo "+ $@"
-	@tox -r -e prebuild -e build
+	@/usr/bin/env bash -c './scripts/prebuild.sh'
+
+.PHONY: build
+build: prebuild ## Package release
+	@echo "+ $@"
+	@/usr/bin/env bash -c './scripts/build.sh'
 
 .PHONY: release-pypi
 release-pypi: ## Package and upload release to pypi

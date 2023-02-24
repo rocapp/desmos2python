@@ -1,1 +1,5 @@
+wheel
+twine
+check-wheel-contents
+jinja2
 jinja2-cli

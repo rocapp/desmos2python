@@ -22,8 +22,20 @@ init_resources_d2p = \
     .init_resources_d2p
 logger.setLevel(orig_lvl)
 
+
+def get_version():
+    from setuptools_scm.version import guess_next_simple_semver
+    def clean_scheme(version):
+        return guess_next_simple_semver(version, retain=3, increment=True)
+    return {'local_scheme': clean_scheme}
+
 setup(
     name = "desmos2python",
-    setup_requires = ['numpy', 'docutils'],
     cmdclass = {"init_resources_d2p": init_resources_d2p},
+    use_scm_version={
+        'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$',
+        'write_to_template': '__version__ = "{version}"',
+        'write_to': 'desmos2python/_version.py',
+    },
+    setup_requires = ['numpy', 'docutils', 'setuptools_scm'],
 )

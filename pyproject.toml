@@ -32,8 +32,6 @@ file = "LICENSE"
 
 # enable dynamic versioning
 [tool.setuptools_scm]
-write_to = "desmos2python/_version.py"
-local_scheme = "no-local-version"
 
 [tool.setuptools]
 zip-safe = false
