@@ -1,10 +1,10 @@
 [build-system]
-requires = [ "setuptools>=40.6.0", "setuptools-scm", "wheel>=0.34.2", "tox-envlist" ]
+requires = [ "setuptools>=40.6.0", "wheel>=0.34.2", "setuptools_scm", "tox-envlist" ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "desmos2python"
-dynamic = [ "dependencies", "readme", "version", "entry-points", ]
+dynamic = [ "dependencies", "readme", "entry-points", "version"]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
 requires-python = ">=3.8.10"
 classifiers = [
@@ -21,7 +21,6 @@ keywords = ["desmos", "graphing calculator", "conversion", "convert to python", 
 name = "Robert Ahlroth Capps"
 email = "rcapps@teladochealth.com"
 
-
 [project.urls]
 Homepage = "https://github.com/rocapp/desmos2python"
 "Issue Tracker" = "https://github.com/rocapp/desmos2python/issues"
@@ -30,12 +29,11 @@ Homepage = "https://github.com/rocapp/desmos2python"
 [project.license]
 file = "LICENSE"
 
-# enable dynamic versioning
-[tool.setuptools_scm]
-
 [tool.setuptools]
 zip-safe = false
 platforms = [ "Windows", "macOS", "Linux",]
+
+[tool.setuptools_scm]
 
 [tool.whey]
 base-classifiers = []
