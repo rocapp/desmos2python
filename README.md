@@ -1,8 +1,6 @@
 # desmos2python
 convert Desmos equations to executable Python code.
 
-*NOTE: This is very much a work in progress.*
-
 ## TOC
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -57,6 +55,8 @@ convert Desmos equations to executable Python code.
 - `python3.8`
 
 NOTE: *working on expanding compatibility...*
+
+NOTE: *still a work in progress for sure.*
 
 ### Helpful tips
 

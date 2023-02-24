@@ -1,9 +1,7 @@
 desmos2python
 =============
 
-convert Desmos equations to executable Python code.
-
-*NOTE: This is very much a work in progress
+convert Desmos equations to executable Python code
 
 Links
 -----
@@ -42,6 +40,8 @@ Compatibility
 -  ``python3.8``
 
 NOTE: *working on expanding compatibility…*
+
+NOTE: *still a work in progress for sure.*
 
 Helpful tips
 ~~~~~~~~~~~~
