@@ -8,3 +8,4 @@ antlr4-python3-runtime==4.10
 selenium
 pypandoc
 svg.path
+pandas
