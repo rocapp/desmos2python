@@ -3,9 +3,10 @@ setuptools_scm
 numpy
 matplotlib
 jinja2
+jinja2-cli
 sympy
 antlr4-python3-runtime==4.10
 selenium
 pypandoc
-svg.path
 pandas
+svg.path

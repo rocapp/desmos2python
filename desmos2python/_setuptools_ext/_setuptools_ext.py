@@ -21,6 +21,8 @@ class init_resources_d2p(Command):
     ref: https://github.com/pypa/setuptools/blob/1c3b501535a856838a077d50989a5c019d2db679/setuptools/_distutils/cmd.py#L17
     """
 
+    user_options = []
+
     def initialize_options(self):
         pass
 

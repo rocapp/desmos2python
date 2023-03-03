@@ -11,3 +11,6 @@ python -m pip install -r $SCRIPTS_DIR/requirements.txt -r $SCRIPTS_DIR/../requir
 #: fix readme RST
 python $SCRIPTS_DIR/../fix_readme.py
 
+#: ensure resources are linked
+python $SCRIPTS_DIR/../setup.py init_resources_d2p
+

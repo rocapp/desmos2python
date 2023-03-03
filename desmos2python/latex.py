@@ -120,7 +120,7 @@ class DesmosLatexParser:
         self.auto_exec = auto_exec
         self.ns_name = f'{ns_prefix}{ns_name}'
         self._errs = []
-        self._fpath: AnyStr = None
+        self._fpath: Union[AnyStr, Path, None] = None
         self._lines: DesmosLinesContainer = DesmosLinesContainer()
         self.lines, self.fpath = lines, fpath
         if auto_init is True:
@@ -144,7 +144,11 @@ class DesmosLatexParser:
         return self._fpath
     @fpath.setter
     def fpath(self, new):
-        self._fpath = Path(new)
+        try:
+            self._fpath = Path(new)
+        except Exception:
+            logging.warn(f"given fpath '{new}' could not be converted to Path", exc_info=1)
+            self._fpath = new
 
     @property
     def lines(self):
