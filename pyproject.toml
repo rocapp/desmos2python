@@ -19,7 +19,7 @@ keywords = ["desmos", "graphing calculator", "conversion", "convert to python", 
 
 [[project.authors]]
 name = "Robert Ahlroth Capps"
-email = "rcapps@teladochealth.com"
+email = "rocappATgmailDOTcom"
 
 [project.urls]
 Homepage = "https://github.com/rocapp/desmos2python"
