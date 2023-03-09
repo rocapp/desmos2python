@@ -4,7 +4,7 @@ modname: 'desmos2python'
 version: '0.2.5'
 copyright_years: '2022'
 author: 'Robert Ahlroth Capps'
-email: 'rcapps@teladochealth.com'
+email: 'rocappATgmailDOTcom'
 username: 'rocapp'
 license: 'MIT'
 short_desc: 'seamless conversion between Desmos LaTeX equations & executable Python
