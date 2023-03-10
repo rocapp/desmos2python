@@ -1,9 +1,7 @@
-setuptools >= 35.0.2	
+setuptools>=40.6.0
 setuptools_scm
 wheel
 repo_helper
-tox
-tox-envlist
 flake8
 autopep8
 pypandoc

@@ -3,9 +3,6 @@ Overview
 
 .. This file based on https://github.com/PyGithub/PyGithub/blob/master/CONTRIBUTING.md
 
-``desmos2python`` uses `tox <https://tox.readthedocs.io>`_ to automate testing and packaging,
-and `pre-commit <https://pre-commit.com>`_ to maintain code quality.
-
 Install ``pre-commit`` with ``pip`` and install the git hook:
 
 .. prompt:: bash
@@ -36,37 +33,11 @@ Or, to run the complete autoformatting suite:
 Automated tests
 -------------------
 
-Tests are run with ``tox`` and ``pytest``.
-To run tests for a specific Python version, such as Python 3.8:
-
-.. prompt:: bash
-
-	tox -e py38
+Tests are run with ``pytest``.
 
 
 To run tests for all Python versions, simply run:
 
 .. prompt:: bash
 
-	tox
-
-
-Type Annotations
--------------------
-
-Type annotations are checked using ``mypy``. Run ``mypy`` using ``tox``:
-
-.. prompt:: bash
-
-	tox -e mypy
-
-
-
-Build documentation locally
-------------------------------
-
-The documentation is powered by Sphinx. A local copy of the documentation can be built with ``tox``:
-
-.. prompt:: bash
-
-	tox -e docs
+	pytest

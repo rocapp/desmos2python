@@ -1,12 +1,12 @@
 [build-system]
-requires = [ "setuptools>=40.6.0", "wheel>=0.34.2", "setuptools_scm", "tox-envlist" ]
+requires = [ "setuptools>=40.6.0", "wheel>=0.34.2", "setuptools_scm", ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "desmos2python"
 dynamic = [ "dependencies", "readme", "entry-points", "version"]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
-requires-python = ">=3.8.10"
+requires-python = "3.8"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -19,7 +19,6 @@ keywords = ["desmos", "graphing calculator", "conversion", "convert to python", 
 
 [[project.authors]]
 name = "Robert Ahlroth Capps"
-email = "rocappATgmailDOTcom"
 
 [project.urls]
 Homepage = "https://github.com/rocapp/desmos2python"

@@ -1,8 +1,3 @@
-.PHONY: clean-tox
-clean-tox: ## Remove tox testing artifacts
-	@echo "+ $@"
-	@rm -rf .tox/
-
 .PHONY: clean-nox
 clean-nox: ## Remove nox testing artifacts
 	@echo "+ $@"
@@ -42,22 +37,7 @@ clean-pyc: ## Remove Python file artifacts
 	@find . -name '*~' -exec rm -f {} +
 
 .PHONY: clean ## Remove all file artifacts
-clean: clean-tox clean-build clean-pyc clean-nox clean-coverage clean-pytest clean-docs-build
-
-.PHONY: lint
-lint: ## Check code style
-	@echo "+ $@"
-	@tox -e lint
-
-.PHONY: test
-test: ## Run tests quickly with the default Python
-	@echo "+ $@"
-	@tox -n test
-
-.PHONY: test-all
-test-all: clean-build clean-tox ## Run tests on every Python version with tox
-	@echo "+ $@"
-	@tox -r -n test -n qa
+clean: clean-build clean-pyc clean-nox clean-coverage clean-pytest clean-docs-build
 
 .PHONY: prebuild
 prebuild: clean
@@ -68,6 +48,11 @@ prebuild: clean
 build: prebuild ## Package release
 	@echo "+ $@"
 	@/usr/bin/env bash -c './scripts/build.sh'
+
+.PHONY: test
+test: build ## run tests
+	@echo "+ $@"
+	pytest
 
 .PHONY: release-pypi
 release-pypi: ## Package and upload release to pypi

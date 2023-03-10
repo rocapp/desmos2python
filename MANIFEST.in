@@ -3,7 +3,6 @@ include AUTHORS.rst
 include LICENSE
 include README.md
 include README.rst
-include tox.ini
 include MANIFEST.in
 include *.txt
 include setup.py

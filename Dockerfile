@@ -1,5 +1,5 @@
 FROM ubuntu:rolling as ubuntu
-FROM python:3.8.15 as base
+FROM python:3.8 as base
 
 LABEL Author, Robert Ahlroth Capps
 
@@ -39,7 +39,7 @@ ENV APP_HOME /desmos2python
 ENV PATH=/root/local/bin:/root/.local:$PATH
 COPY --from=base . ${APP_HOME}
 WORKDIR ${APP_HOME}
-RUN tox
+RUN pytest
 
 # # # # # # # #
 #:  [latest]  #

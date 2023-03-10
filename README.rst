@@ -85,4 +85,4 @@ Development
 -----------
 
 -  Build locally: ``make build``
--  Testing: ``tox -e``
+-  Testing: ``pytest``

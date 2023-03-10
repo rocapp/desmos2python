@@ -42,9 +42,11 @@ jobs:
         run: |
           python -VV
           python -m site
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install tox
+          python -m pip install --upgrade pip setuptools wheel pytest flake8
 
-      - name: "Run Flake8"
+      - name: Run tests
         if: steps.changes.outputs.code == 'true'
-        run: "python -m tox -e lint -s false -- --format github"
+        run: |
+          python -VV
+          python -m build
+          flake8 --statistics

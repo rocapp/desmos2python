@@ -33,11 +33,11 @@ If you have ``git`` installed, you can clone the repository with the following c
 Building from source
 -----------------------
 
-The recommended way to build ``desmos2python`` is to use `tox <https://tox.readthedocs.io/en/latest/>`_:
+The recommended way to build ``desmos2python`` is to use `build`:
 
 .. prompt:: bash
 
-	tox -e build
+	python -m build
 
 The source and wheel distributions will be in the directory ``dist``.
 
