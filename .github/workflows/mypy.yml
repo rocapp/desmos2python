@@ -46,4 +46,11 @@ jobs:
         run: |
           python -VV
           python -m site
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools wheel build mypy
+      
+      - name: Run tests (mypy)
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          python -VV
+          python -m build
+          mypy .
