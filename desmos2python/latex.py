@@ -18,6 +18,7 @@ from desmos2python.utils import flatten, D2P_Resources
 from desmos2python.resources.greek_chars import GreekAlphabet
 from desmos2python.pdoc import convert2plain as pdoc_convert2plain
 import builtins
+import warnings
 
 __all__ = [
     'DesmosLinesContainer',
@@ -29,6 +30,7 @@ builtins.__dict__.update(vars(GlobalConsts))
 
 #: instantiate namespace-specific logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class DesmosLinesContainer:
@@ -58,9 +60,6 @@ class DesmosLinesContainer:
 
     def __len__(self):
         return len(self.lines)
-
-    def _ipython_key_completions_(self):
-        return ['lines', ]
 
     def __str__(self):
         head = f'{self.__class__.__name__}(length={len(self.lines):03d})'
@@ -100,9 +99,6 @@ class DesmosLatexParser:
     """
     
     __mro__ = (object, )
-
-    def _ipython_key_completions_(self):
-        return []
 
     def __init__(self, expr_str: AnyStr = None, lines: List[AnyStr] = None,
                  fpath: AnyStr = None, auto_init: bool = True, auto_exec: bool = False,
@@ -498,7 +494,7 @@ class PycodePatterns(PatternsMixIn):
     main_line_repl: AnyStr = \
         r'''
 def _\1(self, \2):
-    return'''
+    return '''
 
     #: mismatched parentheses
     fix_mismatch_pattern = re.compile(r'(\(+.*(?![)\)]))', flags=re.DOTALL)
@@ -691,10 +687,11 @@ def parse_latex_lines2sympy(latex_list, verbosity=logging.ERROR):
         matches = PycodePatterns.subn(line, key='subscript_grouped')
         line = matches[0]
         try:
-            out = parse_latex(pdoc_convert2plain(line))
+            with warnings.catch_warnings() as wctx:
+                warnings.filterwarnings('ignore')
+                out = parse_latex(pdoc_convert2plain(line))
         except Exception:
-            with LoggingContext(logger, level=verbosity) as log_ctx:
-                logging.warning(traceback.format_exc())
+            logging.debug('failed to convert to latex via sympy (parse_latex)', exc_info=1)
             #: ! replace desmos-style lists with latex lists
             line_repl = SympyPatterns.subn(line, key='desmos_list')
             line = line_repl[0]

@@ -9,11 +9,8 @@ Links
 -  `desmos2python (PyPI) <https://pypi.org/project/desmos2python/>`__
 -  `Desmos Graphing Caculator <https://desmos.com/calculator>`__
 
-Notes
------
-
 Dependencies
-~~~~~~~~~~~~
+------------
 
 **Build/Dev**
 
@@ -35,22 +32,25 @@ Dependencies
 -  ``geckodriver`` and ``firefox``
 
 Compatibility
-~~~~~~~~~~~~~
+-------------
 
--  ``python3.8``
+-  ``python3.10``
 
-NOTE: *working on expanding compatibility…*
+-  NOTE: *working on expanding compatibility…*
 
-NOTE: *still a work in progress for sure.*
+-  NOTE: *still a work in progress for sure.*
 
 Helpful tips
-~~~~~~~~~~~~
+------------
 
 *…definitely recommend using a virtual environment, e.g. via docker or
 conda.*
 
 Install
 -------
+
+From PyPi:
+~~~~~~~~~~
 
 ``python3 -m pip install desmos2python``
 

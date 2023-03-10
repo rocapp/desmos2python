@@ -4,7 +4,19 @@ convert Desmos equations to executable Python code.
 ## TOC
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
+**Table of Contents**<!-- TOC -->
+- [TOC](#toc)
+- [Links](#links)
+- [Notes](#notes)
+    - [Dependencies](#dependencies)
+    - [Compatibility](#compatibility)
+    - [Helpful tips](#helpful-tips)
+- [Install](#install)
+- [Examples](#examples)
+    - [`DesmosLatexParser` API Example:](#desmoslatexparser-api-example)
+- [Development](#development)
+<!-- /TOC -->
+
 
 - [desmos2python](#desmos2python)
     - [TOC](#toc)
@@ -28,9 +40,8 @@ convert Desmos equations to executable Python code.
 - [desmos2python (PyPI)](https://pypi.org/project/desmos2python/)
 - [Desmos Graphing Caculator](https://desmos.com/calculator)
 
-## Notes
 
-### Dependencies
+## Dependencies
 
 **Build/Dev**
 
@@ -50,19 +61,22 @@ convert Desmos equations to executable Python code.
 - `libxt6`
 - `geckodriver` and `firefox`
 
-### Compatibility
+## Compatibility
 
-- `python3.8`
+- `python3.10`
 
-NOTE: *working on expanding compatibility...*
 
-NOTE: *still a work in progress for sure.*
+- NOTE: *working on expanding compatibility...*
 
-### Helpful tips
+- NOTE: *still a work in progress for sure.*
+
+## Helpful tips
 
 *...definitely recommend using a virtual environment, e.g. via docker or conda.*
 
 ## Install
+
+### From PyPi:
 
 `python3 -m pip install desmos2python`
 

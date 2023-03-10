@@ -2,11 +2,11 @@ setuptools>=40.6.0
 setuptools_scm
 numpy
 matplotlib
-jinja2
+jinja2==3.1.2
 jinja2-cli
-sympy
+sympy==1.11.1
 antlr4-python3-runtime==4.10
 selenium
 pypandoc
-pandas
+pandas>=1.5.3
 svg.path

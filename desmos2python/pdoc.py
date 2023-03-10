@@ -3,8 +3,19 @@ import os
 import pypandoc as pdoc
 import copy
 import re
+import sys
+from pathlib import Path
+module_root = Path(__file__).parents[1].__str__()
+if module_root not in sys.path:
+    sys.path.insert(0, module_root)
 from desmos2python.utils import D2P_Resources
+from desmos2python import greek
 import importlib
+import logging
+import unicodedata
+from typing import Tuple, Literal
+
+logger = logging.getLogger(__name__)
 
 
 def convert2html(s, opts=''):
@@ -34,39 +45,36 @@ def fix_missing_multop(plain):
     return plain
 
 
-def convert2plain(estr, clean_ws=True):
+def fix_unicode(estr: str) -> str:
+    """ref: https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize"""
+    return unicodedata.normalize('NFKC', estr)
+
+
+def convert2plain(estr: str, clean_ws = True) -> str:
     """Convert generic input (e.g., latex) to pandoc plain format.
 
     Examples:
     ---------
-    > convert2plain('T_{z}\\left(S,M,Y,X,B,x\\right)=S\\cdot\\left(\\pi\\cdot\\left(E\\left(\\left(M+0.7\\cdot E\\left(100\\cdot\\left(Y\\cdot\\left(\\tau_{y}-1.5\\right)\\right)\\right)-0.7E\\left(0.7\\left(X-Y\\right)\\right)\\right)\\right)-\\frac{0.5E\\left(0.3X\\right)}{1+M+0.23E\\left(Y\\right)}\\right)E\\left(M-1\\right)-Z_{tail}\\left(t_{z}\\left(x+1\\right),X,Y,B\\right)\\right)')
-    'T_z(S,M,Y,X,B,x)=S*(π*(E((M+0.7*E(100*(Y*(τ_y-1.5)))-0.7*E(0.7*(X-Y))))-((0.5*E(0.3*X))/(1+M+0.23*E(Y))))*E(M-1)-Z_tail(t_z(x+1),X,Y,B))'
+    >>> print(convert2plain(r'T_{z}\\left(S,M,Y,X,B,x\\right)=S\\cdot\\left(\\pi\\cdot\\left(E\\left(\\left(M+0.7\\cdot E\\left(100\\cdot\\left(Y\\cdot\\left(\\tau_{y}-1.5\\right)\\right)\\right)-0.7E\\left(0.7\\left(X-Y\\right)\\right)\\right)\\right)-\\frac{0.5E\\left(0.3X\\right)}{1+M+0.23E\\left(Y\\right)}\\right)E\\left(M-1\\right)-Z_{tail}\\left(t_{z}\\left(x+1\\right),X,Y,B\\right)\\right)'))
+    T_(z)*(S,M,Y,X,B,x)=S⋅(pi⋅(E((M+0.7⋅E(100⋅(Y⋅(tau_(y)−1.5)))−0.7*E(0.7*(X−Y))))−((0.5*E(0.3*X))/(1+M+0.23*E(Y))))*E(M−1)−Z_(tail)*(t_(z)*(x+1),X,Y,B))
     """
     estr = copy.copy(estr)
-    #: replace greek characters with unicode equivalents
-    greek = importlib.import_module('resources.greek_chars', 'desmos2python') \
-                     .GreekAlphabet()
-    syms = {'\\cdot': '*', }
-    syms.update({'\\'+k: v['uni'] for k, v in greek.df.to_dict().items()})
-    repls = {}  # store complete map of replacements
-    for k, v in syms.items():
-        # handle fullname present in string
-        if k in estr and k != '\\cdot':
-            repls[v] = k
-        # handle symbol found in string
-        if v in estr:
-            repls[k] = v
-        estr = estr.replace(k, v)
-    #: replace latex fractions with ( () / () )
+    #: replace latex fractions with ( () / () ) ! needed ahead of pandoc
     estr = replace_latex_fracs(estr)
     #: perform pandoc conversion step
-    plain = pdoc.convert_text(source=estr, to='plain', format='latex')
-    #: fix greek characters (back to full name)...
-    for symbol, fullname in repls.items():
-        estr = estr.replace(symbol, fullname).replace('\\', '')
+    estr = pdoc.convert_text(source=f"${estr}$", to='plain', format='latex')
+    #: fix unicode
+    estr = fix_unicode(estr)
+    #: replace greek chars
+    estr, repls = greek.convert(estr, infmt='unicode', outfmt='plain')
     #: clean whitespace...
     if clean_ws is True:
-        plain = plain.strip().replace('\n', '').replace('\r', '')
+        estr = estr.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     #: fix any missing multiplication operators...
-    plain = fix_missing_multop(plain)
-    return plain
+    estr = fix_missing_multop(estr)
+    return str(estr)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

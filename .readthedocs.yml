@@ -9,7 +9,7 @@ formats:
  - pdf
  - htmlzip
 python:
-  version: 3.8
+  version: 3.10
   install:
    - requirements: requirements.txt
    - requirements: doc-source/requirements.txt

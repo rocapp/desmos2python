@@ -1,7 +1,12 @@
 """_setuptools_ext.py: extensions for setuptools commands.
 """
+import json
+import tempfile
+import datetime
+import importlib
+import distutils.core
 from distutils.cmd import Command
-from desmos2python.utils import D2P_Resources
+from setuptools.command.install import install
 
 __all__ = [
     'init_resources_d2p',
@@ -15,22 +20,23 @@ d2p_subdirs = ['calcState_json',
                'templates', 'models', 'screenshots']
 
 
-class init_resources_d2p(Command):
+class init_resources_d2p(install):
     """custom setuptools command for initializing desmos2python resources.
 
     ref: https://github.com/pypa/setuptools/blob/1c3b501535a856838a077d50989a5c019d2db679/setuptools/_distutils/cmd.py#L17
+    ref: https://stackoverflow.com/a/1321345/1871569
     """
-
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
+    def __init__(self, dist):
+        super().__init__(dist)
+        self.D2P_Resources = None
 
     def _init_user_resources(self):
-        user_path = D2P_Resources.get_user_resources_path()
+        ts = datetime.datetime.now().isoformat()
+        tsinfo = json.dumps({"desmos2python": {"_init-user-resources": {"timestamp": ts}}})
+        ts_suffix = ts.split('T')[0] + ".log"
+        with tempfile.NamedTemporaryFile(prefix="d2p-init-user-resources", suffix=ts_suffix, mode="w", delete=False) as ftmp:
+            ftmp.write(tsinfo)
+        user_path = self.D2P_Resources.get_user_resources_path()
         if not user_path.exists():
             user_path.mkdir()   # ! don't overwrite if path already exists
             assert user_path.resolve().exists() is True
@@ -43,8 +49,8 @@ class init_resources_d2p(Command):
         return True
 
     def _link_pkg_resources(self):
-        pkg_path = D2P_Resources.get_package_resources_path()
-        pkg_link = D2P_Resources.get_package_resources_link_local()
+        pkg_path = self.D2P_Resources.get_package_resources_path()
+        pkg_link = self.D2P_Resources.get_package_resources_link_local()
         if not pkg_link.exists():
             pkg_link.symlink_to(pkg_path, target_is_directory=True)
             assert pkg_link.resolve().exists() is True
@@ -55,6 +61,7 @@ class init_resources_d2p(Command):
         - create the user resources directory if it doesn't exist.
         - symlink package resources to `$HOME/.local/share/desmos2python/` directory.
         """
+        install.run(self)
+        self.D2P_Resources = importlib.import_module('desmos2python.utils').D2P_Resources
         self._init_user_resources()
         self._link_pkg_resources()
-

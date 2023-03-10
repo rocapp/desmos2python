@@ -38,4 +38,4 @@ class D2P_Resources:
 
     @staticmethod
     def get_package_resources_path():
-        return next(importlib.resources.path("desmos2python.resources", ".").gen)
+        return importlib.resources.path("desmos2python.resources", ".")
