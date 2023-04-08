@@ -2,6 +2,13 @@ import traceback
 from pathlib import Path
 import sys
 import logging
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("desmos2python")
+except PackageNotFoundError:
+    # package is not installed
+    pass
 
 
 def get_rootpath(startpath=__file__):

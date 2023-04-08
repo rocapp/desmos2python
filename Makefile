@@ -62,10 +62,11 @@ release-pypi: ## Package and upload release to pypi
 .PHONY: release-github
 release-github: build ## Package and upload release to github
 	@echo "+ $@"
+	@/bin/bash -c 'git add -A; git commit -m "release"; git push'
 	@/bin/bash -c 'gh release create'
 
 .PHONY: release
-release: release-github release-pypi
+release: build release-github release-pypi
 	@echo "+ $@"
 	@echo "...done with all release tasks."
 
