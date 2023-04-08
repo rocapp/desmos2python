@@ -6,7 +6,7 @@ import datetime
 import importlib
 import distutils.core
 from distutils.cmd import Command
-from setuptools.command.install import install
+from setuptools.command.install import install as _install
 
 __all__ = [
     'init_resources_d2p',
@@ -20,7 +20,7 @@ d2p_subdirs = ['calcState_json',
                'templates', 'models', 'screenshots']
 
 
-class init_resources_d2p(install):
+class init_resources_d2p(_install):
     """custom setuptools command for initializing desmos2python resources.
 
     ref: https://github.com/pypa/setuptools/blob/1c3b501535a856838a077d50989a5c019d2db679/setuptools/_distutils/cmd.py#L17
@@ -61,7 +61,7 @@ class init_resources_d2p(install):
         - create the user resources directory if it doesn't exist.
         - symlink package resources to `$HOME/.local/share/desmos2python/` directory.
         """
-        install.run(self)
+        _install.run(self)
         self.D2P_Resources = importlib.import_module('desmos2python.utils').D2P_Resources
         self._init_user_resources()
         self._link_pkg_resources()

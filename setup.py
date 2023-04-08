@@ -22,10 +22,15 @@ init_resources_d2p = \
     .init_resources_d2p
 logger.setLevel(orig_lvl)
 
+
+class install(init_resources_d2p):
+    pass
+
+
 setup(
     name = "desmos2python",
     cmdclass = {
-        "install": init_resources_d2p,
+        "install": install,
         "init_resources_d2p": init_resources_d2p,
     },
     setup_requires = ['numpy', 'docutils',],
