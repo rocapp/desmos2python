@@ -9,6 +9,7 @@ import importlib
 import distutils.core
 from distutils.cmd import Command
 from setuptools.command.install import install as _install
+import shutil
 
 __all__ = [
     'init_resources_d2p',
@@ -60,9 +61,8 @@ class init_resources_d2p(_install):
     def _link_pkg_resources(self):
         pkg_path = self.D2P_Resources.get_package_resources_path()
         pkg_link = self.D2P_Resources.get_package_resources_link_local()
-        if not pkg_link.exists():
-            pkg_link.symlink_to(pkg_path, target_is_directory=True)
-            assert pkg_link.resolve().exists() is True
+        shutil.copytree(pkg_path, pkg_link, dirs_exist_ok=True)
+        assert pkg_link.resolve().exists() is True
 
     def _run(self):
         """initialize desmos2python package/user-local resources.

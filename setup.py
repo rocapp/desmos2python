@@ -13,25 +13,7 @@ rootdir = str(Path('.').resolve())
 if rootdir not in sys.path:
     sys.path.insert(0, rootdir)
 
-logger = logging.getLogger()
-orig_lvl = logger.getEffectiveLevel()
-logger.setLevel(logging.ERROR)
-init_resources_d2p = \
-    importlib \
-    .import_module('._setuptools_ext', package='desmos2python') \
-    .init_resources_d2p
-logger.setLevel(orig_lvl)
-
-
-class install(init_resources_d2p):
-    pass
-
-
 setup(
     name = "desmos2python",
-    cmdclass = {
-        "install": install,
-        "init_resources_d2p": init_resources_d2p,
-    },
     setup_requires = ['numpy', 'docutils',],
 )
