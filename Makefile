@@ -66,8 +66,11 @@ release-github: build ## Package and upload release to github
 
 .PHONY: tag
 tag:
+ifndef tag_version
 	@echo "+ $@"
-	@/bin/bash -c "read -p 'Tag version: ' tag_version && git tag $tag_version"
+	@echo "Enter a tag version: "
+	@read tag_version; git tag $$tag_version
+endif
 
 .PHONY: release
 release: clean tag build release-pypi release-github
