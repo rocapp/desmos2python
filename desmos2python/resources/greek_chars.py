@@ -30,7 +30,7 @@ class GreekAlphabet:
     """
     
     def __init__(self):
-        self.rpath = D2P_Resources.get_package_resources_link_local()
+        self.rpath = D2P_Resources.get_package_resources_path()
         self.d = json.loads(self.rpath.joinpath('greek_alphabet.json').read_text())
         #: access like: GreekAlphabet().df['Alpha'], output: 'A'
         self.df = pd.Series(self.d) \
