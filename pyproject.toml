@@ -150,7 +150,7 @@ file = [ "requirements/dev-requirements.txt", "requirements/build-requirements.t
 
 [tool.setuptools.packages.find]
 where = [ ".", "desmos2python", ]
-include = [ "desmos2python*", "desmos2python.resources*",]
+include = [ "desmos2python*", "desmos2python.resources*", "desmos2python._setuptools_ext*" ]
 #: don't consider tests a separate package...
 exclude = ["tests",]
 
