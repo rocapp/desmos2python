@@ -1,5 +1,6 @@
 """_setuptools_ext.py: extensions for setuptools commands.
 """
+import logging
 import os
 import json
 import tempfile
@@ -32,12 +33,16 @@ class init_resources_d2p(_install):
         super().__init__(dist)
         self.D2P_Resources = None
         self.ftmp = None
-        delete_ftmp = bool(os.getenv("D2P_DEBUG", False)) # delete log file if not set
+        delete_ftmp = not bool(os.getenv("D2P_DEBUG", False)) # delete log file if not set
         ts = datetime.datetime.now().isoformat()
-        tsinfo = json.dumps({"desmos2python": {"_init-user-resources": {"timestamp": ts}}})
+        self._log_obj = {"desmos2python": {"_init-user-resources": {"timestamp": ts, "log": [], }}}
         ts_suffix = ts.split('T')[0] + ".log"
         self.ftmp = tempfile.NamedTemporaryFile(prefix="d2p-init-user-resources", suffix=ts_suffix, mode="a+", delete=delete_ftmp)
-        self.ftmp.write(tsinfo)
+
+    def _log(self, msg):
+        self._log_obj['desmos2python']['_init-user-resources']['log'].append(msg)
+        logging.info(msg)
+        return self._log_obj
 
     def _init_user_resources(self):
         user_path = self.D2P_Resources.get_user_resources_path()
@@ -65,19 +70,24 @@ class init_resources_d2p(_install):
         - symlink package resources to `$HOME/.local/share/desmos2python/` directory.
         """
         self.D2P_Resources = importlib.import_module('desmos2python.utils').D2P_Resources
-        self.ftmp.write("...initialized D2P_Resources.")
+        self._log("...initialized D2P_Resources.")
         self._init_user_resources()
-        self.ftmp.write("...ran _init_user_resources.")
+        self._log("...ran _init_user_resources.")
         self._link_pkg_resources()
-        self.ftmp.write("...ran _link_pkg_resources.")
-        self.ftmp.write("...complete!")
+        self._log("...ran _link_pkg_resources.")
+        self._log("...complete!")
+        self._close_log()
+
+    def _close_log(self):
+        """write, then close log file"""
+        self.ftmp.write(json.dumps(self._log_obj, indent=3))
         self.ftmp.close()  # ! deletes the file without D2P_DEBUG env variable
 
     def run(self):
         """run the original install build step, then the d2p-specific actions (with logging).
         """
         _install.run(self)
-        self.ftmp.write("..._install stage complete.")
+        self._log("..._install stage complete.")
         self._run()
 
 

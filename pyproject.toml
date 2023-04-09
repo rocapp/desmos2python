@@ -5,7 +5,7 @@ backend-path = ["desmos2python/_setuptools_ext"]
 
 [project]
 name = "desmos2python"
-dynamic = [ "dependencies", "readme", "entry-points", "version"]
+dynamic = [ "dependencies", "readme", "version"]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
 requires-python = ">=3.10"
 classifiers = [
