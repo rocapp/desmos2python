@@ -1,5 +1,6 @@
 """_setuptools_ext.py: extensions for setuptools commands.
 """
+import os
 import json
 import tempfile
 import datetime
@@ -23,19 +24,22 @@ d2p_subdirs = ['calcState_json',
 class init_resources_d2p(_install):
     """custom setuptools command for initializing desmos2python resources.
 
+    ref: https://setuptools.pypa.io/en/latest/build_meta.html#how-to-use-it
     ref: https://github.com/pypa/setuptools/blob/1c3b501535a856838a077d50989a5c019d2db679/setuptools/_distutils/cmd.py#L17
     ref: https://stackoverflow.com/a/1321345/1871569
     """
     def __init__(self, dist):
         super().__init__(dist)
         self.D2P_Resources = None
-
-    def _init_user_resources(self):
+        self.ftmp = None
+        delete_ftmp = bool(os.getenv("D2P_DEBUG", False)) # delete log file if not set
         ts = datetime.datetime.now().isoformat()
         tsinfo = json.dumps({"desmos2python": {"_init-user-resources": {"timestamp": ts}}})
         ts_suffix = ts.split('T')[0] + ".log"
-        with tempfile.NamedTemporaryFile(prefix="d2p-init-user-resources", suffix=ts_suffix, mode="w", delete=False) as ftmp:
-            ftmp.write(tsinfo)
+        self.ftmp = tempfile.NamedTemporaryFile(prefix="d2p-init-user-resources", suffix=ts_suffix, mode="a+", delete=delete_ftmp)
+        self.ftmp.write(tsinfo)
+
+    def _init_user_resources(self):
         user_path = self.D2P_Resources.get_user_resources_path()
         if not user_path.exists():
             user_path.mkdir()   # ! don't overwrite if path already exists
@@ -55,13 +59,40 @@ class init_resources_d2p(_install):
             pkg_link.symlink_to(pkg_path, target_is_directory=True)
             assert pkg_link.resolve().exists() is True
 
-    def run(self):
+    def _run(self):
         """initialize desmos2python package/user-local resources.
-
         - create the user resources directory if it doesn't exist.
         - symlink package resources to `$HOME/.local/share/desmos2python/` directory.
         """
-        _install.run(self)
         self.D2P_Resources = importlib.import_module('desmos2python.utils').D2P_Resources
+        self.ftmp.write("...initialized D2P_Resources.")
         self._init_user_resources()
+        self.ftmp.write("...ran _init_user_resources.")
         self._link_pkg_resources()
+        self.ftmp.write("...ran _link_pkg_resources.")
+        self.ftmp.write("...complete!")
+        self.ftmp.close()  # ! deletes the file without D2P_DEBUG env variable
+
+    def run(self):
+        """run the original install build step, then the d2p-specific actions (with logging).
+        """
+        _install.run(self)
+        self.ftmp.write("..._install stage complete.")
+        self._run()
+
+
+from setuptools import build_meta as _orig
+
+prepare_metadata_for_build_wheel = _orig.prepare_metadata_for_build_wheel
+build_sdist = _orig.build_sdist
+
+
+def run_link_files():
+    init_resources_d2p(_orig.Distribution())._run()  # ! run post-install step
+    return True
+
+
+def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
+    output = _orig.build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+    run_link_files()
+    return output
