@@ -73,7 +73,7 @@ ifndef tag_version
 endif
 
 .PHONY: release
-release: clean tag build release-pypi release-github
+release: clean tag build release-pypi
 	@echo "+ $@"
 	@echo "...done with all release tasks."
 
