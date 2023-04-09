@@ -69,7 +69,7 @@ tag:
 ifndef tag_version
 	@echo "+ $@"
 	@echo "Enter a tag version: "
-	@read tag_version; git tag $$tag_version
+	@read tag_version; if [ $$tag_version ]; then git tag $$tag_version ; fi
 endif
 
 .PHONY: release
