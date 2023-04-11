@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Robert Ahlroth Capps <rcapps@teladochealth.com>
+* Robert Ahlroth Capps <rocapp@gmail.com>
 
 Contributors
 ------------

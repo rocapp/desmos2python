@@ -90,3 +90,4 @@ _version.py
 *~
 .local-bashrc
 pandoc_bin/
+.vscode/

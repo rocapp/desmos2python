@@ -1,7 +1,9 @@
 """Parse Desmos SVG screenshots -> plottable"""
 from functools import cached_property
-from svg.path import parse_path
-from svg.path.path import Line
+import importlib
+import svg.path as svg_path
+parse_path = svg_path.parse_path
+Line = svg_path.path.Line
 from xml.dom import minidom
 from desmos2python.utils import D2P_Resources
 from typing import NamedTuple, Sequence

@@ -39,7 +39,7 @@ def replace_latex_fracs(estr):
 
 def fix_missing_multop(plain):
     """fix missing multiplication operators in post-conversion (latex->plain pandoc)"""
-    out = re.subn(string=plain, pattern=r'([\)\.0-9])([\(A-Za-z])', repl=r'\1*\2')
+    out = re.subn(string=plain, pattern=r'((?!math\.|np\.)([\)0-9]))((?!^math\.|^np\.)([\(A-Za-z]))', repl=r'\1*\3')
     if len(out) > 0:
         return out[0]
     return plain
@@ -50,7 +50,7 @@ def fix_unicode(estr: str) -> str:
     return unicodedata.normalize('NFKC', estr)
 
 
-def convert2plain(estr: str, clean_ws = True) -> str:
+def convert2plain(estr: str, clean_ws = True, src_format='latex') -> str:
     """Convert generic input (e.g., latex) to pandoc plain format.
 
     Examples:
@@ -59,10 +59,12 @@ def convert2plain(estr: str, clean_ws = True) -> str:
     T_(z)*(S,M,Y,X,B,x)=S⋅(pi⋅(E((M+0.7⋅E(100⋅(Y⋅(tau_(y)−1.5)))−0.7*E(0.7*(X−Y))))−((0.5*E(0.3*X))/(1+M+0.23*E(Y))))*E(M−1)−Z_(tail)*(t_(z)*(x+1),X,Y,B))
     """
     estr = copy.copy(estr)
-    #: replace latex fractions with ( () / () ) ! needed ahead of pandoc
-    estr = replace_latex_fracs(estr)
-    #: perform pandoc conversion step
-    estr = pdoc.convert_text(source=f"${estr}$", to='plain', format='latex')
+    
+    if src_format == 'latex':
+        #: replace latex fractions with ( () / () ) ! needed ahead of pandoc
+        estr = replace_latex_fracs(estr)
+        #: perform pandoc conversion step
+        estr = pdoc.convert_text(source=f"${estr}$", to='plain', format='latex')
     #: fix unicode
     estr = fix_unicode(estr)
     #: replace greek chars

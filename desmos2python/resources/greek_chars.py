@@ -113,7 +113,7 @@ class GreekAlphabet:
         """
         if ignore_operators is True:
             plainops = ['*']
-            latexops = ['\\cdot']
+            latexops = []
             operators = plainops + latexops  # operators to ignore
             ignore.extend(operators)
         #: init syms map of { input_syms -> output_syms }

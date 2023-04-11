@@ -30,7 +30,7 @@ builtins.__dict__.update(vars(GlobalConsts))
 
 #: instantiate namespace-specific logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 
 class DesmosLinesContainer:
@@ -223,7 +223,7 @@ class DesmosLatexParser:
         try:
             slines.lines = self.parse2sympy(self.latex_lines)
         except Exception:
-            logging.warning(traceback.format_exc())
+            logging.debug(traceback.format_exc())
         finally:
             return slines
 
@@ -242,7 +242,7 @@ class DesmosLatexParser:
             dlc_plines.lines = DesmosLatexParser.fix_pycode_line(
                 plines_raw, from_sympy=False)
         except Exception:
-            logging.warning(traceback.format_exc())
+            logging.debug(traceback.format_exc())
         finally:
             return dlc_plines
 
@@ -268,7 +268,7 @@ class DesmosLatexParser:
                 pline = pycode(pline)
         except Exception:
             with LoggingContext(logger, level=verbosity) as logctx:
-                logging.warning(traceback.format_exc())
+                logging.debug(traceback.format_exc())
         pline = pline \
             .split('# Not supported in Python:\n  #')[-1] \
             .split('\n')[-1]
@@ -492,9 +492,7 @@ class PycodePatterns(PatternsMixIn):
     main_line_pattern = re.compile(
         r'([a-zA-Z_]+)\(([a-zA-Z_,\s][a-zA-Z_0-9,\s]*)\)=', re.UNICODE)
     main_line_repl: AnyStr = \
-        r'''
-def _\1(self, \2):
-    return '''
+        r'def _\1(self, \2):\n    return '
 
     #: mismatched parentheses
     fix_mismatch_pattern = re.compile(r'(\(+.*(?![)\)]))', flags=re.DOTALL)
@@ -534,9 +532,10 @@ def _\1(self, \2):
         """
         local_vars = cls.find_args(string)
         def _repl_inst_attrs(m, local_vars=local_vars):
-            return f'self.{m.group(0)}' if m.group(0) not in local_vars else m.group(0)
+            filters = all([m.group(0) not in local_vars, ])
+            return f'self.{m.group(0)}' if filters else m.group(0)
         prefix, sepstr, retstr = string.partition('return')
-        new_retstr = re.sub(string=retstr, pattern='([a-zA-Z_]+)', repl=_repl_inst_attrs)
+        new_retstr = re.sub(string=retstr, pattern=r'(?:(?!np\.[a-zA-Z]+))(?:\()([a-zA-Z]+)', repl=_repl_inst_attrs)
         return prefix + sepstr + new_retstr
 
 
@@ -557,7 +556,7 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
 
     >>> import json
     >>> fix_raw_pycode(line).get('pycode_fixed')
-    'def _E(self, x):\\n    return 1 + np.exp(-2*x)'
+    'def _E(self, x):\\n    return 1+np.exp(-2*x)'
     """
     #: lines -> line (! handle list of strings)
     if not isinstance(line, str):
@@ -573,6 +572,8 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
     line = str(line).replace(') == ', ') = ')
     line = line.lstrip('(')[:-1]  # remove first and last parentheses
     line = line.replace('cdot ', 'cdot')  # remove extra spaces for cdot
+    #: convert to plain python math
+    line = pdoc_convert2plain(line, src_format='plain')
     #: formatting regex...
     for fmt_key in ['expo', 'subscript_grouped', 'subscript', 'comma', ]:
         line = PycodePatterns.subn(line, key=fmt_key)[0]
@@ -595,7 +596,7 @@ def fix_raw_pycode(line: Union[AnyStr, List[AnyStr]], retfull: bool = True) -> D
                 '=')[1].strip()  # current value
         except IndexError:
             #: ! handle case in which this is neither a parameter, nor an equation
-            logging.warning(traceback.format_exc())
+            logging.debug(traceback.format_exc())
             return None
         try:
             param_value = float(param_value)

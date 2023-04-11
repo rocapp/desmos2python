@@ -25,9 +25,7 @@ RUN python3.10 -m pip install \
     -r requirements/build-requirements.txt
 
 #: ! explicitly set to --no-cache for installing the wheel
-RUN python3.10 -m pip install --no-cache-dir --user --upgrade $(ls *.whl | head -1)
-#: ! ensure resources are initialized properly
-RUN python3.10 setup.py init_resources_d2p
+RUN python3 -m pip install --no-cache-dir --user --upgrade $(ls *.whl | head -1)
 
 # # # # # # #
 #:  [test]  #
