@@ -1,11 +1,11 @@
 [build-system]
-requires = [ "setuptools>=40.6.0", "wheel>=0.34.2", "setuptools_scm", ]
+requires = ["setuptools>=40.6.0", "wheel>=0.34.2", "setuptools_scm"]
 build-backend = "_setuptools_ext"
 backend-path = ["desmos2python/_setuptools_ext"]
 
 [project]
 name = "desmos2python"
-dynamic = [ "dependencies", "readme", "version"]
+dynamic = ["dependencies", "readme", "version"]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
 requires-python = ">=3.10"
 classifiers = [
@@ -16,7 +16,13 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-keywords = ["desmos", "graphing calculator", "conversion", "convert to python", "mathematical modeling"]
+keywords = [
+    "desmos",
+    "graphing calculator",
+    "conversion",
+    "convert to python",
+    "mathematical modeling",
+]
 
 [[project.authors]]
 name = "Robert Ahlroth Capps"
@@ -31,15 +37,15 @@ file = "LICENSE"
 
 [tool.setuptools]
 zip-safe = false
-platforms = [ "Windows", "macOS", "Linux",]
+platforms = ["Windows", "macOS", "Linux"]
 
 [tool.setuptools_scm]
 
 [tool.whey]
 base-classifiers = []
-python-versions = [ "3.10",]
-python-implementations = [ "CPython",]
-platforms = [ "Windows", "macOS", "Linux",]
+python-versions = ["3.10"]
+python-implementations = ["CPython"]
+platforms = ["Windows", "macOS", "Linux"]
 license-key = "MIT"
 
 [tool.sphinx-pyproject]
@@ -74,14 +80,14 @@ extensions = [
 ]
 sphinxemoji_style = "twemoji"
 gitstamp_fmt = "%d %b %Y"
-templates_path = [ "_templates",]
-html_static_path = [ "_static",]
+templates_path = ["_templates"]
+html_static_path = ["_static"]
 source_suffix = ".rst"
 master_doc = "index"
-suppress_warnings = [ "image.nonlocal_uri",]
+suppress_warnings = ["image.nonlocal_uri"]
 pygments_style = "default"
 html_theme = "domdf_sphinx_theme"
-html_theme_path = [ "../..",]
+html_theme_path = ["../.."]
 html_show_sourcelink = true
 toctree_plus_types = [
     "class",
@@ -129,7 +135,7 @@ no_implicit_optional = true
 show_error_codes = true
 
 [tool.snippet-fmt]
-directives = [ "code-block",]
+directives = ["code-block"]
 
 [tool.dependency-dash."requirements/requirements.txt"]
 order = 10
@@ -143,16 +149,24 @@ order = 30
 include = false
 
 [tool.setuptools.dynamic.readme]
-file = [ "README.rst",]
+file = ["README.rst"]
 
 [tool.setuptools.dynamic.dependencies]
-file = [ "requirements/dev-requirements.txt", "requirements/build-requirements.txt", "requirements/requirements.txt", ]
+file = [
+    "requirements/dev-requirements.txt",
+    "requirements/build-requirements.txt",
+    "requirements/requirements.txt",
+]
 
 [tool.setuptools.packages.find]
-where = [ ".", "desmos2python", ]
-include = [ "desmos2python*", "desmos2python.resources*", "desmos2python._setuptools_ext*" ]
+where = [".", "desmos2python"]
+include = [
+    "desmos2python*",
+    "desmos2python.resources*",
+    "desmos2python._setuptools_ext*",
+]
 #: don't consider tests a separate package...
-exclude = ["tests",]
+exclude = ["tests"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.*jinja2", "*.js"]
@@ -160,11 +174,28 @@ exclude = ["tests",]
 #: ref: https://setuptools.pypa.io/en/latest/userguide/datafiles.html#exclude-package-data
 [tool.setuptools.exclude-package-data]
 "*" = [
-  "repo-helper.yml", "fix_readme.py", "Dockerfile", "deploy.sh", "build.sh",
-  "Makefile", "environment.yml", "*.log", ".gitattributes*", ".dependabot*",
-  ".github*", "git_archival.txt", ".devcontainer.json", ".imgbotconfig*",
-  ".pylintrc", ".pre-commit-config.yaml", ".gitignore", ".style.yapf",
-  ".readthedocs.yml",
+    "repo-helper.yml",
+    "fix_readme.py",
+    "Dockerfile",
+    "deploy.sh",
+    "build.sh",
+    "Makefile",
+    "environment.yml",
+    "*.log",
+    ".gitattributes*",
+    ".dependabot*",
+    ".github*",
+    "git_archival.txt",
+    ".devcontainer.json",
+    ".imgbotconfig*",
+    ".pylintrc",
+    ".pre-commit-config.yaml",
+    ".gitignore",
+    ".style.yapf",
+    ".readthedocs.yml",
+    "*.nix",
+    "docker-compose.yml",
+    "flake.nix",
 ]
 
 [tool.snippet-fmt.languages.python]

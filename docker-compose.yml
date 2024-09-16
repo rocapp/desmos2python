@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/desmos2python
+    environment:
+      - APP_HOME=/desmos2python
+      - PATH=/root/local/bin:/root/.local:$PATH
+    command: ["bash", "-c", "ipython"]
+    ports:
+      - "8888:8888"  # Adjust the port as needed
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/desmos2python
+    environment:
+      - APP_HOME=/desmos2python
+      - PATH=/root/local/bin:/root/.local:$PATH
+    command: ["pytest"]
