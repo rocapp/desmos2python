@@ -6,39 +6,39 @@ convert Desmos equations to executable Python code
 Links
 -----
 
--  `desmos2python (PyPI) <https://pypi.org/project/desmos2python/>`__
--  `Desmos Graphing Caculator <https://desmos.com/calculator>`__
+- `desmos2python (PyPI) <https://pypi.org/project/desmos2python/>`__
+- `Desmos Graphing Caculator <https://desmos.com/calculator>`__
 
 Dependencies
 ------------
 
 **Build/Dev**
 
--  ``GNU Make``
--  ``docker``
+- ``GNU Make``
+- ``docker``
 
 **Libraries**
 
 *required*
 
--  pandoc (e.g. ``apt-get install pandoc`` for Debian-based, or
-   ``pacman -S pandoc`` for Arch Linux)
+- pandoc (e.g. ``apt-get install pandoc`` for Debian-based, or
+  ``pacman -S pandoc`` for Arch Linux)
 
 *(optional) For headless browser functionality (uses ``selenium``):*
 
--  ``pyenv``
--  ``libxext6``
--  ``libxt6``
--  ``geckodriver`` and ``firefox``
+- ``pyenv``
+- ``libxext6``
+- ``libxt6``
+- ``geckodriver`` and ``firefox``
 
 Compatibility
 -------------
 
--  ``python3.10``
+- ``python3.10``
 
--  NOTE: *working on expanding compatibility…*
+- NOTE: *working on expanding compatibility…*
 
--  NOTE: *still a work in progress for sure.*
+- NOTE: *still a work in progress for sure.*
 
 Helpful tips
 ------------
@@ -84,5 +84,5 @@ Examples
 Development
 -----------
 
--  Build locally: ``make build``
--  Testing: ``pytest``
+- Build locally: ``make build``
+- Testing: ``pytest``

@@ -5,11 +5,10 @@ backend-path = ["desmos2python/_setuptools_ext"]
 
 [project]
 name = "desmos2python"
-dynamic = [ "dependencies", "readme", "version"]
+dynamic = [ "dependencies", "readme", "version" ]
 description = "seamless conversion between Desmos LaTeX equations and executable Python code."
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
@@ -26,9 +25,6 @@ Homepage = "https://github.com/rocapp/desmos2python"
 "Issue Tracker" = "https://github.com/rocapp/desmos2python/issues"
 "Source Code" = "https://github.com/rocapp/desmos2python"
 
-[project.license]
-file = "LICENSE"
-
 [tool.setuptools]
 zip-safe = false
 platforms = [ "Windows", "macOS", "Linux",]
@@ -40,7 +36,6 @@ base-classifiers = []
 python-versions = [ "3.10",]
 python-implementations = [ "CPython",]
 platforms = [ "Windows", "macOS", "Linux",]
-license-key = "MIT"
 
 [tool.sphinx-pyproject]
 github_username = "rocapp"
@@ -141,6 +136,11 @@ include = false
 [tool.dependency-dash."doc-source/requirements.txt"]
 order = 30
 include = false
+
+[dependency-groups]
+dev = [
+    "pip>=25.3",
+]
 
 [tool.setuptools.dynamic.readme]
 file = [ "README.rst",]

@@ -106,3 +106,13 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     output = _orig.build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
     run_link_files()
     return output
+
+
+def build_editable(
+    wheel_directory,
+    config_settings = None,
+    metadata_directory = None,
+) -> str:
+    output = _orig.build_editable(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+    run_link_files()
+    return output

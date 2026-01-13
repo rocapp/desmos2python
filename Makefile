@@ -36,18 +36,24 @@ clean-pyc: ## Remove Python file artifacts
 	@find . -type f -name '*.py[co]' -exec rm -f {} +
 	@find . -name '*~' -exec rm -f {} +
 
+.PHONY: clean-venv
+clean-venv: ## Remove any existing uv virtualenvs
+	@echo "+ $@"
+	@find . -type d -name '.venv' -exec rm -rf {} +
+
 .PHONY: clean ## Remove all file artifacts
-clean: clean-build clean-pyc clean-nox clean-coverage clean-pytest clean-docs-build
+clean: clean-build clean-pyc clean-nox clean-coverage clean-pytest clean-docs-build clean-venv
 
 .PHONY: prebuild
 prebuild: clean
 	@echo "+ $@"
-	@/usr/bin/env bash -c './scripts/prebuild.sh'
+	@/usr/bin/env -S sh -c 'uv sync --dev'
+	@/usr/bin/env -S sh -c './scripts/prebuild.sh'
 
 .PHONY: build
 build: prebuild ## Package release
 	@echo "+ $@"
-	@/usr/bin/env bash -c './scripts/build.sh'
+	@/usr/bin/env -S sh -c './scripts/build.sh'
 
 .PHONY: test
 test: build ## run tests
@@ -57,12 +63,12 @@ test: build ## run tests
 .PHONY: release-pypi
 release-pypi: ## Package and upload release to pypi
 	@echo "+ $@"
-	@/bin/bash -c 'twine upload dist/*'
+	@/usr/bin/env -S sh -c 'uv publish'
 
 .PHONY: release-github
 release-github: build ## Package and upload release to github
 	@echo "+ $@"
-	@/bin/bash -c 'gh release create'
+	@/usr/bin/env -S sh -c 'gh release create'
 
 .PHONY: tag
 tag:
